@@ -6,6 +6,7 @@ import 'steps/step2b_address.dart';
 import 'steps/step3_professional.dart';
 import 'steps/step4_nominee.dart';
 import 'steps/step5_tp.dart';
+import 'steps/step5b_services.dart';
 import 'steps/step7_beneficial_owner.dart';
 import 'steps/step6_review.dart';
 import '../utils/mock_data.dart';
@@ -26,6 +27,7 @@ class _MainFormScreenState extends ConsumerState<MainFormScreen> {
     "পেশা", // Professional
     "নমিনি", // Nominee
     "লেনদেন", // TP
+    "সেবা ও FATCA", // Services (New)
     "মালিকানা", // Beneficial
     "রিভিউ", // Review
   ];
@@ -106,6 +108,10 @@ class _MainFormScreenState extends ConsumerState<MainFormScreen> {
           onBack: () => setState(() => _currentStep--),
         ),
         TransactionProfileStep(
+          onNext: () => setState(() => _currentStep++),
+          onBack: () => setState(() => _currentStep--),
+        ),
+        AdditionalServicesStep(
           onNext: () => setState(() => _currentStep++),
           onBack: () => setState(() => _currentStep--),
         ),
