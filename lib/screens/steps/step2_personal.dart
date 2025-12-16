@@ -29,6 +29,16 @@ class PersonalInfoStep extends ConsumerWidget {
         initialDate: initial,
         firstDate: DateTime(1900),
         lastDate: DateTime.now(),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: Theme.of(context).primaryColor,
+              ),
+            ),
+            child: child!,
+          );
+        },
       );
 
       if (picked != null) {
@@ -54,48 +64,55 @@ class PersonalInfoStep extends ConsumerWidget {
               title: "মৌলিক তথ্য",
               child: Column(
                 children: [
-                  TextFormField(
+                  CustomTextField(
+                    label: "নাম (বাংলায়)",
                     initialValue: form.applicantNameBangla,
-                    decoration: InputDecoration(labelText: "নাম (বাংলায়)"),
                     textInputAction: TextInputAction.next,
-                    validator: (v) => FormValidators.validateRequired(v, fieldName: 'Bangla Name'),
-                    onChanged: (v) =>
-                        notifier.updatePersonalDetails(nameBangla: v),
+                    validator: (v) {
+                       final req = FormValidators.validateRequired(v, fieldName: 'Bangla Name');
+                       if (req != null) return req;
+                       return FormValidators.validateBangla(v);
+                    },
+                    onChanged: (v) => notifier.updatePersonalDetails(nameBangla: v),
                   ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    initialValue: form.applicantNameEnglish,
-                    decoration: InputDecoration(labelText: "নাম (ইংরেজিতে)"),
-                    textInputAction: TextInputAction.next,
-                    validator: (v) => FormValidators.validateRequired(v, fieldName: 'English Name'),
-                    onChanged: (v) =>
-                        notifier.updatePersonalDetails(nameEnglish: v),
-                  ),
-                  SizedBox(height: 16),
 
-                  // Date Picker Field
-                  GestureDetector(
-                    onTap: () => _selectDate(context, ref, form.dob, (date) {
-                         notifier.updatePersonalDetails(dob: date);
-                    }),
-                    child: AbsorbPointer(
-                      child: TextFormField(
-                        controller: TextEditingController(text: form.dob),
-                        decoration: InputDecoration(
-                          labelText: "জন্ম তারিখ",
-                          hintText: "DD/MM/YYYY",
-                          suffixIcon: Icon(Icons.calendar_today),
+                  CustomTextField(
+                    label: "নাম (ইংরেজিতে)",
+                    initialValue: form.applicantNameEnglish,
+                    textInputAction: TextInputAction.next,
+                    validator: (v) {
+                       final req = FormValidators.validateRequired(v, fieldName: 'English Name');
+                       if (req != null) return req;
+                       return FormValidators.validateEnglish(v);
+                    },
+                    onChanged: (v) => notifier.updatePersonalDetails(nameEnglish: v),
+                  ),
+
+                  // Date Picker Field (Custom Implementation matching CustomTextField style)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: GestureDetector(
+                      onTap: () => _selectDate(context, ref, form.dob, (date) {
+                           notifier.updatePersonalDetails(dob: date);
+                      }),
+                      child: AbsorbPointer(
+                        child: TextFormField(
+                          controller: TextEditingController(text: form.dob),
+                          decoration: InputDecoration(
+                            labelText: "জন্ম তারিখ",
+                            hintText: "DD/MM/YYYY",
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                            suffixIcon: Icon(Icons.calendar_today, color: Theme.of(context).primaryColor),
+                          ),
+                          validator: (v) => FormValidators.validateRequired(v, fieldName: 'Date of Birth'),
                         ),
-                        validator: (v) => FormValidators.validateRequired(v, fieldName: 'Date of Birth'),
                       ),
                     ),
                   ),
 
-                  SizedBox(height: 16),
-                  TextFormField(
+                  CustomTextField(
+                    label: "জাতীয় পরিচয়পত্র নম্বর",
                     initialValue: form.nidNumber,
-                    decoration:
-                        InputDecoration(labelText: "জাতীয় পরিচয়পত্র নম্বর"),
                     keyboardType: TextInputType.number,
                     textInputAction: TextInputAction.next,
                     validator: FormValidators.validateNID,
@@ -108,22 +125,19 @@ class PersonalInfoStep extends ConsumerWidget {
               title: "পিতা/মাতার তথ্য",
               child: Column(
                 children: [
-                  TextFormField(
+                  CustomTextField(
+                    label: "পিতার নাম",
                     initialValue: form.fatherName,
-                    decoration: InputDecoration(labelText: "পিতার নাম"),
                     textInputAction: TextInputAction.next,
                     validator: (v) => FormValidators.validateRequired(v, fieldName: "Father's Name"),
-                    onChanged: (v) =>
-                        notifier.updatePersonalDetails(fatherName: v),
+                    onChanged: (v) => notifier.updatePersonalDetails(fatherName: v),
                   ),
-                  SizedBox(height: 16),
-                  TextFormField(
+                  CustomTextField(
+                    label: "মাতার নাম",
                     initialValue: form.motherName,
-                    decoration: InputDecoration(labelText: "মাতার নাম"),
                     textInputAction: TextInputAction.done,
                     validator: (v) => FormValidators.validateRequired(v, fieldName: "Mother's Name"),
-                    onChanged: (v) =>
-                        notifier.updatePersonalDetails(motherName: v),
+                    onChanged: (v) => notifier.updatePersonalDetails(motherName: v),
                   ),
                 ],
               ),
@@ -134,7 +148,12 @@ class PersonalInfoStep extends ConsumerWidget {
                 if (_formKey.currentState!.validate()) {
                   onNext();
                 } else {
-                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please fix the errors above.")));
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     SnackBar(
+                       content: Text("অনুগ্রহ করে উপরের ভুলগুলো সংশোধন করুন"),
+                       backgroundColor: Theme.of(context).colorScheme.error,
+                     )
+                   );
                 }
               },
             ),

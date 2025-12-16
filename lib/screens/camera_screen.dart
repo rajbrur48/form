@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
@@ -37,23 +36,40 @@ class _CameraScreenState extends State<CameraScreen> {
       } else {
           // Handle permission denied
           if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Camera permission is required")));
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("ক্যামেরা ব্যবহারের অনুমতি প্রয়োজন")));
               Navigator.pop(context);
           }
       }
   }
 
   Future<void> _initCamera() async {
-    cameras = await availableCameras();
-    if (cameras != null && cameras!.isNotEmpty) {
-      _controller = CameraController(cameras![0], ResolutionPreset.high);
-      await _controller!.initialize();
-      if (mounted) {
-        setState(() {
-          _isCameraInitialized = true;
-        });
-      }
+    try {
+        cameras = await availableCameras();
+        if (cameras != null && cameras!.isNotEmpty) {
+        _controller = CameraController(
+            cameras![0],
+            ResolutionPreset.high,
+            enableAudio: false, // Performance optimization
+        );
+        await _controller!.initialize();
+        if (mounted) {
+            setState(() {
+            _isCameraInitialized = true;
+            });
+        }
+        } else {
+             _showError("কোনো ক্যামেরা পাওয়া যায়নি");
+        }
+    } catch (e) {
+        _showError("ক্যামেরা চালু করা যাচ্ছে না: $e");
     }
+  }
+
+  void _showError(String message) {
+      if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+          Navigator.pop(context);
+      }
   }
 
   @override
@@ -85,11 +101,23 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_isCameraInitialized) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(child: CircularProgressIndicator(color: Theme.of(context).primaryColor)));
     }
+
+    // Camera Preview requires a specific aspect ratio, often creating layout issues.
+    // We use a Scaled preview or just a simple Container for now.
     return Scaffold(
-      appBar: AppBar(title: Text(widget.label)),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+          title: Text(widget.label),
+          backgroundColor: Colors.black,
+          iconTheme: IconThemeData(color: Colors.white),
+          titleTextStyle: TextStyle(color: Colors.white, fontSize: 18),
+      ),
       body: Stack(
+        fit: StackFit.expand,
         children: [
           CameraPreview(_controller!),
 
@@ -99,29 +127,56 @@ class _CameraScreenState extends State<CameraScreen> {
               width: 300,
               height: 200,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.green, width: 3),
+                border: Border.all(color: Theme.of(context).primaryColor, width: 3),
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                    BoxShadow(color: Colors.black26, blurRadius: 10, spreadRadius: 2)
+                ]
+              ),
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                      Icon(Icons.crop_free, color: Colors.white.withOpacity(0.5), size: 48),
+                      Text("এখানে স্থাপন করুন", style: TextStyle(color: Colors.white.withOpacity(0.8))),
+                  ],
               ),
             ),
           ),
 
+          // Controls
           Positioned(
             bottom: 30,
             left: 0,
             right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                IconButton(
-                    icon: Icon(Icons.photo_library, color: Colors.white, size: 30),
-                    onPressed: _pickFromGallery,
+            child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                color: Colors.black45,
+                child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                    IconButton(
+                        icon: Icon(Icons.photo_library, color: Colors.white, size: 30),
+                        tooltip: "গ্যালারি",
+                        onPressed: _pickFromGallery,
+                    ),
+
+                    Container(
+                        height: 70, width: 70,
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 4),
+                        ),
+                        child: FloatingActionButton(
+                            onPressed: _captureImage,
+                            backgroundColor: Colors.white,
+                            elevation: 0,
+                            child: Icon(Icons.camera, color: Colors.black, size: 32),
+                        ),
+                    ),
+
+                    SizedBox(width: 30), // Placeholder for balance
+                ],
                 ),
-                FloatingActionButton(
-                  onPressed: _captureImage,
-                  child: Icon(Icons.camera),
-                ),
-                SizedBox(width: 30), // Placeholder for balance
-              ],
             ),
           ),
         ],

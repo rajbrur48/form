@@ -155,36 +155,51 @@ class IdentityVerificationStep extends ConsumerWidget {
       BuildContext context, String label, String? path, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
         height: 180,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: path != null
                 ? Theme.of(context).primaryColor
                 : Colors.grey.shade300,
             width: path != null ? 2 : 1,
-            style: path != null ? BorderStyle.solid : BorderStyle.none, // dashed border logic requires CustomPainter, keeping simple for now
+            style: BorderStyle.solid,
           ),
+          boxShadow: [
+             if(path == null)
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.05),
+                blurRadius: 5,
+                spreadRadius: 1
+              )
+          ]
         ),
         child: path != null
             ? ClipRRect(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(6),
                 child: Image.file(File(path), fit: BoxFit.cover),
               )
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt_outlined,
-                      size: 40, color: Theme.of(context).primaryColor),
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.05),
+                      shape: BoxShape.circle
+                    ),
+                    child: Icon(Icons.camera_alt_outlined,
+                        size: 32, color: Theme.of(context).primaryColor),
+                  ),
                   SizedBox(height: 12),
                   Text(
                     label,
                     style: TextStyle(
-                        color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                        color: Colors.grey.shade800, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(

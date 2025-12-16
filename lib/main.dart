@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/main_form_screen.dart';
+import 'screens/landing_screen.dart';
 import 'theme/app_theme.dart';
+import 'screens/components/error_boundary.dart';
 
 void main() {
-  runApp(ProviderScope(child: MyApp()));
+  runApp(ProviderScope(child: ErrorBoundary(child: MyApp())));
 }
 
 class MyApp extends StatelessWidget {
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
       title: 'ব্যাংক হিসাব খোলার আবেদন',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: MainFormScreen(),
+      home: LandingScreen(),
     );
   }
 }
