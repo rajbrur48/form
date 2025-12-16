@@ -24,12 +24,12 @@ class TransactionProfileStep extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("Transaction Profile", style: Theme.of(context).textTheme.headlineSmall),
+          Text("ট্রানজেকশন প্রোফাইল (টিপি)", style: Theme.of(context).textTheme.headlineSmall),
           SizedBox(height: 10),
 
           TextFormField(
             initialValue: tp.sourceOfFund,
-            decoration: InputDecoration(labelText: "Source of Fund", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "আয়ের উৎস"),
             onChanged: (v) => _updateTp(TransactionProfile(
                 sourceOfFund: v, monthlyIncome: tp.monthlyIncome,
                 cashDepositNum: tp.cashDepositNum, cashDepositAmt: tp.cashDepositAmt
@@ -38,20 +38,20 @@ class TransactionProfileStep extends ConsumerWidget {
           SizedBox(height: 10),
           TextFormField(
             initialValue: tp.monthlyIncome,
-            decoration: InputDecoration(labelText: "Monthly Income (Estimated)", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "মাসিক আয় (আনুমানিক)"),
             onChanged: (v) => _updateTp(TransactionProfile(
                 sourceOfFund: tp.sourceOfFund, monthlyIncome: v,
                 cashDepositNum: tp.cashDepositNum, cashDepositAmt: tp.cashDepositAmt
             )),
           ),
            SizedBox(height: 20),
-           Text("Expected Transactions (Monthly)", style: TextStyle(fontWeight: FontWeight.bold)),
+           Text("প্রত্যাশিত লেনদেন (মাসিক)", style: Theme.of(context).textTheme.titleMedium),
            SizedBox(height: 10),
            Row(
                children: [
                    Expanded(child: TextFormField(
                         initialValue: tp.cashDepositNum,
-                        decoration: InputDecoration(labelText: "Cash Dep. (No)", border: OutlineInputBorder()),
+                        decoration: InputDecoration(labelText: "নগদ জমা (সংখ্যা)"),
                         onChanged: (v) => _updateTp(TransactionProfile(
                             sourceOfFund: tp.sourceOfFund, monthlyIncome: tp.monthlyIncome,
                             cashDepositNum: v, cashDepositAmt: tp.cashDepositAmt
@@ -60,7 +60,7 @@ class TransactionProfileStep extends ConsumerWidget {
                    SizedBox(width: 10),
                    Expanded(child: TextFormField(
                         initialValue: tp.cashDepositAmt,
-                        decoration: InputDecoration(labelText: "Cash Dep. (Amt)", border: OutlineInputBorder()),
+                        decoration: InputDecoration(labelText: "নগদ জমা (পরিমাণ)"),
                         onChanged: (v) => _updateTp(TransactionProfile(
                             sourceOfFund: tp.sourceOfFund, monthlyIncome: tp.monthlyIncome,
                             cashDepositNum: tp.cashDepositNum, cashDepositAmt: v
@@ -73,8 +73,8 @@ class TransactionProfileStep extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-                ElevatedButton(onPressed: onBack, child: Text("Back")),
-                ElevatedButton(onPressed: onNext, child: Text("Next")),
+                OutlinedButton(onPressed: onBack, child: Text("পেছনে")),
+                ElevatedButton(onPressed: onNext, child: Text("পরবর্তী")),
             ],
           )
         ],

@@ -81,35 +81,35 @@ class IdentityVerificationStep extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("Identity Verification", style: Theme.of(context).textTheme.headlineSmall),
+          Text("পরিচয় যাচাইকরণ", style: Theme.of(context).textTheme.headlineSmall),
           SizedBox(height: 10),
           Center(
-            child: ElevatedButton.icon(
-              icon: Icon(Icons.flash_on),
-              label: Text("Auto-Fill (Demo Data)"),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: TextButton.icon(
+              icon: Icon(Icons.flash_on, size: 16),
+              label: Text("স্বয়ংক্রিয় পূরণ (ডেমো)"),
+              style: TextButton.styleFrom(foregroundColor: Colors.orange),
               onPressed: () {
                 ref.read(formProvider.notifier).updateField(MockData.getCompleteMockForm());
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Mock Data Filled!")));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("তথ্য পূরণ করা হয়েছে!")));
               },
             ),
           ),
           SizedBox(height: 10),
 
           _buildImageCard(
-              "NID Front",
+              "জাতীয় পরিচয়পত্র (সামনের অংশ)",
               form.nidFrontPath,
               _scanNidFront
           ),
           SizedBox(height: 10),
           _buildImageCard(
-              "NID Back",
+              "জাতীয় পরিচয়পত্র (পেছনের অংশ)",
               form.nidBackPath,
               _scanNidBack
           ),
           SizedBox(height: 10),
           _buildImageCard(
-              "Applicant Photo",
+              "আবেদনকারীর ছবি",
               form.applicantPhotoPath,
               _takePhoto
           ),
@@ -117,8 +117,8 @@ class IdentityVerificationStep extends ConsumerWidget {
           SizedBox(height: 20),
           ElevatedButton(
             // Allow next if mock data filled (check name) OR images present
-            onPressed: (form.applicantNameBangla.isNotEmpty || (form.nidFrontPath != null && form.applicantPhotoPath != null)) ? onNext : null,
-            child: Text("Next"),
+            onPressed: onNext,
+            child: Text("পরবর্তী"),
           ),
         ],
       ),

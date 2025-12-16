@@ -18,31 +18,31 @@ class BeneficialOwnerStep extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("Beneficial Owner Information", style: Theme.of(context).textTheme.headlineSmall),
-          Text("(If Applicable)", style: Theme.of(context).textTheme.bodySmall),
+          Text("বেনিফিশিয়াল ওনার তথ্য", style: Theme.of(context).textTheme.headlineSmall),
+          Text("(যদি থাকে)", style: Theme.of(context).textTheme.bodySmall),
           SizedBox(height: 10),
 
           TextFormField(
             initialValue: form.beneficialOwnerName,
-            decoration: InputDecoration(labelText: "Beneficial Owner Name", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "বেনিফিশিয়াল ওনারের নাম"),
             onChanged: (v) => notifier.updateField(form.copyWith(beneficialOwnerName: v)),
           ),
           SizedBox(height: 10),
           TextFormField(
             initialValue: form.beneficialOwnerRelation,
-            decoration: InputDecoration(labelText: "Relation with Applicant", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "সম্পর্ক"),
             onChanged: (v) => notifier.updateField(form.copyWith(beneficialOwnerRelation: v)),
           ),
           SizedBox(height: 10),
           TextFormField(
             initialValue: form.beneficialOwnerDob,
-            decoration: InputDecoration(labelText: "Date of Birth", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "জন্ম তারিখ", hintText: "DD/MM/YYYY"),
             onChanged: (v) => notifier.updateField(form.copyWith(beneficialOwnerDob: v)),
           ),
           SizedBox(height: 10),
           TextFormField(
             initialValue: form.beneficialOwnerNid,
-            decoration: InputDecoration(labelText: "NID Number", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "জাতীয় পরিচয়পত্র নম্বর"),
             onChanged: (v) => notifier.updateField(form.copyWith(beneficialOwnerNid: v)),
           ),
 
@@ -50,8 +50,8 @@ class BeneficialOwnerStep extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-                ElevatedButton(onPressed: onBack, child: Text("Back")),
-                ElevatedButton(onPressed: onNext, child: Text("Next")),
+                OutlinedButton(onPressed: onBack, child: Text("পেছনে")),
+                ElevatedButton(onPressed: onNext, child: Text("পরবর্তী")),
             ],
           )
         ],

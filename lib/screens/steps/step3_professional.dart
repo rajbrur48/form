@@ -19,34 +19,34 @@ class ProfessionalStep extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("Professional & Introducer Info", style: Theme.of(context).textTheme.headlineSmall),
+          Text("পেশা ও পরিচয়দানকারী", style: Theme.of(context).textTheme.headlineSmall),
           SizedBox(height: 10),
 
           TextFormField(
             initialValue: form.occupation,
-            decoration: InputDecoration(labelText: "Occupation", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "পেশা"),
             onChanged: (v) => notifier.updateField(form.copyWith(occupation: v)),
           ),
           SizedBox(height: 10),
           TextFormField(
             initialValue: form.monthlyIncome,
-            decoration: InputDecoration(labelText: "Monthly Income", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "মাসিক আয়"),
             onChanged: (v) => notifier.updateField(form.copyWith(monthlyIncome: v)),
           ),
 
           SizedBox(height: 20),
-          Text("Introducer Information", style: TextStyle(fontWeight: FontWeight.bold)),
+          Text("পরিচয়দানকারীর তথ্য", style: Theme.of(context).textTheme.titleMedium),
           SizedBox(height: 10),
 
           TextFormField(
             initialValue: form.introducerName,
-            decoration: InputDecoration(labelText: "Introducer Name", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "পরিচয়দানকারীর নাম"),
             onChanged: (v) => notifier.updateField(form.copyWith(introducerName: v)),
           ),
            SizedBox(height: 10),
           TextFormField(
             initialValue: form.introducerAccountNo,
-            decoration: InputDecoration(labelText: "Introducer Account No", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "হিসাব নম্বর"),
             onChanged: (v) => notifier.updateField(form.copyWith(introducerAccountNo: v)),
           ),
 
@@ -54,8 +54,8 @@ class ProfessionalStep extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-                ElevatedButton(onPressed: onBack, child: Text("Back")),
-                ElevatedButton(onPressed: onNext, child: Text("Next")),
+                OutlinedButton(onPressed: onBack, child: Text("পেছনে")),
+                ElevatedButton(onPressed: onNext, child: Text("পরবর্তী")),
             ],
           )
         ],
