@@ -6,6 +6,7 @@ import 'package:printing/printing.dart';
 import '../../providers/form_provider.dart';
 import '../../services/pdf_generator_service.dart';
 import '../components/form_components.dart';
+import '../../utils/bangla_amount_converter.dart';
 
 class ReviewStep extends ConsumerStatefulWidget {
   @override
@@ -115,9 +116,58 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
                 _buildReviewRow("হিসাবের ধরন", form.accountType),
                 Divider(),
                 _buildReviewRow("পেশা", form.occupation),
+                Divider(),
+                _buildReviewRow("প্রাথমিক জমা", "${form.initialDeposit} টাকা"),
               ],
             ),
           ),
+
+          SectionCard(
+            title: "ঝুঁকি বিশ্লেষণ (Risk Assessment)",
+            child: Column(
+              children: [
+                 _buildReviewRow("ঝুঁকি স্কোর (Score)", form.riskScore.toString()),
+                 Divider(),
+                 Row(
+                   children: [
+                     Text("ঝুঁকি রেটিং (Rating): ", style: TextStyle(fontWeight: FontWeight.w500)),
+                     SizedBox(width: 10),
+                     Container(
+                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                       decoration: BoxDecoration(
+                         color: form.riskRating == 'High' ? Colors.red.shade100 : Colors.green.shade100,
+                         borderRadius: BorderRadius.circular(20),
+                         border: Border.all(color: form.riskRating == 'High' ? Colors.red : Colors.green),
+                       ),
+                       child: Text(
+                         form.riskRating,
+                         style: TextStyle(
+                           color: form.riskRating == 'High' ? Colors.red.shade900 : Colors.green.shade900,
+                           fontWeight: FontWeight.bold,
+                         ),
+                       ),
+                     ),
+                   ],
+                 )
+              ],
+            ),
+          ),
+
+          SectionCard(
+            title: "ঠিকানা যাচাই (Address Verification)",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("বর্তমান ঠিকানা:", style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                Text(form.presentAddress.fullAddress, style: TextStyle(fontWeight: FontWeight.w600)),
+                SizedBox(height: 10),
+                Divider(),
+                Text("স্থায়ী ঠিকানা (NID অনুযায়ী):", style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                Text(form.permanentAddress.fullAddress, style: TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+
           SectionCard(
             title: "আবেদনকারীর স্বাক্ষর",
             child: InkWell(

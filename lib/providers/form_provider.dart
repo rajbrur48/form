@@ -2,9 +2,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/application_form.dart';
 import '../utils/mock_data.dart';
 import '../utils/risk_calculator.dart';
+import '../utils/local_storage_service.dart';
 
 class FormNotifier extends StateNotifier<ApplicationForm> {
-  FormNotifier() : super(ApplicationForm.empty());
+  final LocalStorageService _storageService = LocalStorageService();
+
+  FormNotifier() : super(ApplicationForm.empty()) {
+    _loadSavedForm();
+  }
+
+  Future<void> _loadSavedForm() async {
+    final savedForm = await _storageService.loadForm();
+    if (savedForm != null) {
+      state = savedForm;
+    }
+  }
+
+  Future<void> _saveState() async {
+    await _storageService.saveForm(state);
+  }
 
   void updatePersonalDetails({
     String? nameBangla,
@@ -23,6 +39,7 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       nidNumber: nid,
     );
     _calculateRisk();
+    _saveState();
   }
 
   void updateAddress({
@@ -51,11 +68,13 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       permanentAddress: isPermanent ? newAddress : state.permanentAddress,
       presentAddress: !isPermanent ? newAddress : state.presentAddress,
     );
+    _saveState();
   }
 
   void updateField(ApplicationForm updatedForm) {
       state = updatedForm;
       _calculateRisk();
+      _saveState();
   }
 
   void updateNominee(int index, Nominee nominee) {
@@ -63,6 +82,7 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       if (index < newNominees.length) {
           newNominees[index] = nominee;
           state = state.copyWith(nominees: newNominees);
+          _saveState();
       }
   }
 
@@ -72,6 +92,7 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       nidBackPath: nidBack,
       applicantPhotoPath: applicantPhoto,
     );
+    _saveState();
   }
 
   void _calculateRisk() {

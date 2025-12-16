@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/form_provider.dart';
 import '../../models/application_form.dart';
 import '../components/form_components.dart';
+import '../../utils/form_validators.dart';
 
 class AddressStep extends ConsumerWidget {
   final VoidCallback onNext;
   final VoidCallback onBack;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  const AddressStep({Key? key, required this.onNext, required this.onBack})
+  AddressStep({Key? key, required this.onNext, required this.onBack})
       : super(key: key);
 
   Widget _buildAddressForm(BuildContext context, String title, Address address,
@@ -36,6 +38,7 @@ class AddressStep extends ConsumerWidget {
             initialValue: address.village,
             decoration: InputDecoration(labelText: "গ্রাম / এলাকা"),
             textInputAction: TextInputAction.next,
+            validator: (v) => FormValidators.validateRequired(v, fieldName: 'Village/Area'),
             onChanged: (v) => onUpdate(address.copyWith(village: v)),
           ),
           SizedBox(height: 16),
@@ -45,6 +48,7 @@ class AddressStep extends ConsumerWidget {
               initialValue: address.postOffice,
               decoration: InputDecoration(labelText: "ডাকঘর"),
               textInputAction: TextInputAction.next,
+              validator: (v) => FormValidators.validateRequired(v, fieldName: 'Post Office'),
               onChanged: (v) => onUpdate(address.copyWith(postOffice: v)),
             )),
             SizedBox(width: 16),
@@ -54,6 +58,7 @@ class AddressStep extends ConsumerWidget {
               decoration: InputDecoration(labelText: "পোস্ট কোড"),
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.next,
+              validator: (v) => FormValidators.validateRequired(v, fieldName: 'Post Code'),
               onChanged: (v) => onUpdate(address.copyWith(postCode: v)),
             )),
           ]),
@@ -62,13 +67,15 @@ class AddressStep extends ConsumerWidget {
             initialValue: address.policeStation,
             decoration: InputDecoration(labelText: "থানা"),
             textInputAction: TextInputAction.next,
+            validator: (v) => FormValidators.validateRequired(v, fieldName: 'Police Station'),
             onChanged: (v) => onUpdate(address.copyWith(policeStation: v)),
           ),
           SizedBox(height: 16),
           TextFormField(
             initialValue: address.district,
             decoration: InputDecoration(labelText: "জেলা"),
-            textInputAction: TextInputAction.next, // Or done for the last field
+            textInputAction: TextInputAction.next,
+            validator: (v) => FormValidators.validateRequired(v, fieldName: 'District'),
             onChanged: (v) => onUpdate(address.copyWith(district: v)),
           ),
         ],
@@ -83,32 +90,57 @@ class AddressStep extends ConsumerWidget {
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildAddressForm(context, "বর্তমান ঠিকানা", form.presentAddress,
-              (addr) {
-            notifier.updateField(form.copyWith(presentAddress: addr));
-          }),
-          _buildAddressForm(context, "স্থায়ী ঠিকানা", form.permanentAddress,
-              (addr) {
-            notifier.updateField(form.copyWith(permanentAddress: addr));
-          }),
-          StepNavigationButtons(
-            onBack: onBack,
-            onNext: onNext,
-          ),
-        ],
+      child: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildAddressForm(context, "বর্তমান ঠিকানা", form.presentAddress,
+                (addr) {
+              notifier.updateField(form.copyWith(presentAddress: addr));
+            }),
+            _buildAddressForm(context, "স্থায়ী ঠিকানা", form.permanentAddress,
+                (addr) {
+              notifier.updateField(form.copyWith(permanentAddress: addr));
+            }),
+
+            SectionCard(
+                title: "যোগাযোগ",
+                child: Column(
+                    children: [
+                        TextFormField(
+                            initialValue: form.mobileNumber,
+                            decoration: InputDecoration(labelText: "মোবাইল নম্বর", prefixText: "+88 "),
+                            keyboardType: TextInputType.phone,
+                            validator: FormValidators.validateMobile,
+                            onChanged: (v) => notifier.updateField(form.copyWith(mobileNumber: v)),
+                        ),
+                        SizedBox(height: 16),
+                        TextFormField(
+                            initialValue: form.email,
+                            decoration: InputDecoration(labelText: "ইমেইল (যদি থাকে)"),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: FormValidators.validateEmail,
+                            onChanged: (v) => notifier.updateField(form.copyWith(email: v)),
+                        ),
+                    ],
+                ),
+            ),
+
+            StepNavigationButtons(
+              onBack: onBack,
+              onNext: () {
+                 if (_formKey.currentState!.validate()) {
+                     onNext();
+                 } else {
+                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please fix errors.")));
+                 }
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
-// Extension to make copyWith easier if not already present in model,
-// but based on previous code it seemed manual. I'll rely on the model having it
-// or the manual logic I used before.
-// Wait, the previous code manually reconstructed the object.
-// I should verify if `copyWith` exists or if I should stick to manual reconstruction.
-// Checking previous file content...
-// It was doing: Address(flatNo: v, roadNo: address.roadNo, ...) manually.
-// So I should check the Address model to be safe.
