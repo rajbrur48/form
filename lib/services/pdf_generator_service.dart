@@ -2,110 +2,179 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 import '../models/application_form.dart';
 
 class PdfGeneratorService {
   Future<Uint8List> generatePdf(ApplicationForm form) async {
     final pdf = pw.Document();
 
-    // Load Font
+    // Load Fonts
     final fontData = await rootBundle.load("assets/fonts/NotoSansBengali-Regular.ttf");
     final ttf = pw.Font.ttf(fontData);
     final boldFontData = await rootBundle.load("assets/fonts/NotoSansBengali-Bold.ttf");
     final boldTtf = pw.Font.ttf(boldFontData);
 
-    // Helper for Bangla Text
-    pw.Widget banglaText(String text, {double size = 10, bool isBold = false}) {
-      return pw.Text(
-        text,
-        style: pw.TextStyle(
-          font: isBold ? boldTtf : ttf,
-          fontSize: size,
+    // Helper to load image assets
+    Future<pw.MemoryImage> loadImage(String assetName) async {
+      final ByteData data = await rootBundle.load('assets/images/$assetName');
+      return pw.MemoryImage(data.buffer.asUint8List());
+    }
+
+    // Load Background Images
+    final bgPage1 = await loadImage('1.png');
+    // We would load all 11 images here in a real scenario
+    // final bgPage2 = await loadImage('2.png'); ...
+
+    final bgPage4 = await loadImage('4.png');
+    final bgPage5 = await loadImage('5.png');
+
+    // Helper for Text Overlay
+    pw.Widget positionedText(String text, double x, double y, {double size = 10, bool isBold = false}) {
+      return pw.Positioned(
+        left: x,
+        top: y,
+        child: pw.Text(
+          text,
+          style: pw.TextStyle(
+            font: isBold ? boldTtf : ttf,
+            fontSize: size,
+          ),
         ),
-        textDirection: pw.TextDirection.ltr, // pdf package handles unicode well usually, but check direction
       );
     }
 
-    // Page 1: Personal Information
+    // --- PAGE 1: Personal Info ---
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.all(20),
+        margin: pw.EdgeInsets.zero, // FULL BLEED for background
         build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
+          return pw.Stack(
             children: [
-              pw.Header(level: 0, child: banglaText("ব্যাংক হিসাব খোলার আবেদন ফর্ম", size: 18, isBold: true)),
-
-              pw.SizedBox(height: 20),
-
-              // Photos Row
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Container(
-                    width: 100,
-                    height: 120,
-                    decoration: pw.BoxDecoration(border: pw.Border.all()),
-                    child: form.applicantPhotoPath != null
-                        ? pw.Image(pw.MemoryImage(File(form.applicantPhotoPath!).readAsBytesSync()))
-                        : pw.Center(child: banglaText("আবেদনকারীর ছবি")),
-                  ),
-                   pw.Container(
-                    width: 150,
-                    height: 40,
-                    decoration: pw.BoxDecoration(border: pw.Border.all()),
-                     child: pw.Center(child: banglaText("Office Use Only")),
-                  ),
-                ],
+              // 1. Background Image
+              pw.FullPage(
+                ignoreMargins: true,
+                child: pw.Image(bgPage1, fit: pw.BoxFit.fill),
               ),
 
-              pw.SizedBox(height: 20),
+              // 2. Applicant Photo (Top Right)
+              // Coordinates need to be calibrated to the image.
+              // Assuming A4 (595 x 842 points).
+              // 1.png analysis: Photo box is roughly at x=450, y=100
+              if (form.applicantPhotoPath != null)
+                pw.Positioned(
+                  left: 480,
+                  top: 130,
+                  child: pw.Container(
+                    width: 80,
+                    height: 90,
+                    child: pw.Image(pw.MemoryImage(File(form.applicantPhotoPath!).readAsBytesSync()), fit: pw.BoxFit.cover),
+                  ),
+                ),
 
-              // Personal Info Table
-              pw.Table(
-                border: pw.TableBorder.all(),
-                columnWidths: {0: pw.FlexColumnWidth(1), 1: pw.FlexColumnWidth(2)},
-                children: [
-                  pw.TableRow(children: [
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText("হিসাবের নাম (বাংলায়)")),
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText(form.applicantNameBangla)),
-                  ]),
-                  pw.TableRow(children: [
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText("Account Name (English)")),
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: pw.Text(form.applicantNameEnglish)), // English doesn't need bangla font strictly but safe
-                  ]),
-                   pw.TableRow(children: [
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText("পিতার নাম")),
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText(form.fatherName)),
-                  ]),
-                   pw.TableRow(children: [
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText("মাতার নাম")),
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText(form.motherName)),
-                  ]),
-                   pw.TableRow(children: [
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText("জাতীয় পরিচয়পত্র নম্বর")),
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText(form.nidNumber)),
-                  ]),
-                   pw.TableRow(children: [
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText("জন্ম তারিখ")),
-                    pw.Padding(padding: pw.EdgeInsets.all(4), child: banglaText(form.dob)),
-                  ]),
-                ],
-              ),
+              // 3. Text Fields Overlays (Approximated Coordinates based on visual inspection of standard forms)
+              // Name Bangla
+              positionedText(form.applicantNameBangla, 180, 245, size: 12),
 
-              pw.SizedBox(height: 10),
-              banglaText("Note: This is a generated replica. Full 11 pages would follow this structure."),
+              // Name English
+              positionedText(form.applicantNameEnglish, 180, 265, size: 12),
+
+              // NID Number
+              positionedText(form.nidNumber, 180, 310, size: 12),
+
+              // DOB
+              positionedText(form.dob, 400, 310, size: 12),
+
+              // Father Name
+              positionedText(form.fatherName, 180, 335, size: 12),
+
+              // Mother Name
+              positionedText(form.motherName, 180, 355, size: 12),
+
+              // Example of filling checkboxes (if we had them mapped)
+              // positionedText("X", 100, 100, isBold: true),
             ],
           );
         },
       ),
     );
 
-    // Placeholder for other pages
-    for(int i=2; i<=11; i++) {
-        pdf.addPage(pw.Page(build: (c) => pw.Center(child: banglaText("Page $i Placeholder"))));
+    // --- PAGE 2 & 3: Backgrounds (Professional info usually on Page 1 or 3, simplified here) ---
+    for (int i = 2; i <= 3; i++) {
+       final bg = await loadImage('$i.png');
+       pdf.addPage(pw.Page(
+           pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
+           build: (c) => pw.FullPage(ignoreMargins: true, child: pw.Image(bg, fit: pw.BoxFit.fill))
+       ));
+    }
+
+    // --- PAGE 4: Nominee Info ---
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: pw.EdgeInsets.zero,
+        build: (pw.Context context) {
+           final nominee = form.nominees.isNotEmpty ? form.nominees[0] : Nominee.empty();
+           return pw.Stack(
+            children: [
+              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage4, fit: pw.BoxFit.fill)),
+
+              // Nominee Name
+              positionedText(nominee.name, 180, 150, size: 12),
+              // Relation
+              positionedText(nominee.relation, 180, 170, size: 12),
+              // DOB
+              positionedText(nominee.dob, 400, 170, size: 12),
+              // NID
+              positionedText(nominee.nidNumber, 180, 190, size: 12),
+
+              // Nominee Photo (Top Right Box usually)
+              if (nominee.photoPath.isNotEmpty)
+                pw.Positioned(
+                  left: 480, top: 80,
+                  child: pw.Container(
+                    width: 80, height: 90,
+                    child: pw.Image(pw.MemoryImage(File(nominee.photoPath).readAsBytesSync()), fit: pw.BoxFit.cover),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+
+    // --- PAGE 5: Transaction Profile ---
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: pw.EdgeInsets.zero,
+        build: (pw.Context context) {
+           final tp = form.transactionProfile;
+           return pw.Stack(
+            children: [
+              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage5, fit: pw.BoxFit.fill)),
+
+              // Source of Fund
+              positionedText(tp.sourceOfFund, 250, 180, size: 12),
+              // Monthly Income
+              positionedText(tp.monthlyIncome, 250, 200, size: 12),
+
+              // Cash Deposit
+              positionedText(tp.cashDepositNum, 300, 300, size: 12),
+              positionedText(tp.cashDepositAmt, 400, 300, size: 12),
+            ],
+          );
+        },
+      ),
+    );
+
+    // --- Pages 6-11: Office Use / Risk Grading (Backgrounds) ---
+    for (int i = 6; i <= 11; i++) {
+        final bg = await loadImage('$i.png');
+        pdf.addPage(pw.Page(
+            pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
+            build: (c) => pw.FullPage(ignoreMargins: true, child: pw.Image(bg, fit: pw.BoxFit.fill)),
+        ));
     }
 
     return pdf.save();

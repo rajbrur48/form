@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'steps/step1_identity.dart';
 import 'steps/step2_personal.dart';
+import 'steps/step3_professional.dart';
+import 'steps/step4_nominee.dart';
+import 'steps/step5_tp.dart';
 import 'steps/step6_review.dart';
 
 // We will build the wrapper here
@@ -46,9 +49,18 @@ class _MainFormScreenState extends State<MainFormScreen> {
                     onNext: () => setState(() => _currentStep++),
                     onBack: () => setState(() => _currentStep--),
                 ),
-                Center(child: Text("Step 3: Professional (Pending Implementation)")),
-                Center(child: Text("Step 4: Nominee (Pending Implementation)")),
-                Center(child: Text("Step 5: TP (Pending Implementation)")),
+                ProfessionalStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
+                NomineeStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
+                TransactionProfileStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
                 ReviewStep(),
               ],
             ),

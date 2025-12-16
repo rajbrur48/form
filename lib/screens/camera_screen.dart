@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
 class CameraScreen extends StatefulWidget {
@@ -22,7 +23,24 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
-    _initCamera();
+    _requestPermissionAndInit();
+  }
+
+  Future<void> _requestPermissionAndInit() async {
+      var status = await Permission.camera.status;
+      if (!status.isGranted) {
+          status = await Permission.camera.request();
+      }
+
+      if (status.isGranted) {
+          _initCamera();
+      } else {
+          // Handle permission denied
+          if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Camera permission is required")));
+              Navigator.pop(context);
+          }
+      }
   }
 
   Future<void> _initCamera() async {
