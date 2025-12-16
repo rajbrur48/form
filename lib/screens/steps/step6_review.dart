@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:ui' as ui;
+import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import '../../providers/form_provider.dart';
 import '../../services/pdf_generator_service.dart';
 import '../components/form_components.dart';
-import '../../utils/bangla_amount_converter.dart';
+import '../components/signature_pad.dart';
 
 class ReviewStep extends ConsumerStatefulWidget {
   @override
@@ -18,13 +20,104 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
   bool _showPdf = false;
 
   Future<void> _takeSignature() async {
-    final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
-    if (photo != null) {
-      final form = ref.read(formProvider);
-      ref
-          .read(formProvider.notifier)
-          .updateField(form.copyWith(applicantSignaturePath: photo.path));
-    }
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        List<Offset> currentPoints = [];
+        return Container(
+          height: 400,
+          padding: EdgeInsets.all(16),
+          child: Column(
+            children: [
+               Text("আপনার স্বাক্ষর প্রদান করুন", style: Theme.of(context).textTheme.titleMedium),
+               SizedBox(height: 16),
+               Expanded(
+                 child: Container(
+                   decoration: BoxDecoration(
+                     border: Border.all(color: Colors.grey.shade300),
+                     borderRadius: BorderRadius.circular(8),
+                   ),
+                   child: SignaturePad(
+                     onDrawEnd: (points) {
+                        currentPoints = points;
+                     },
+                     strokeColor: Colors.black,
+                   ),
+                 ),
+               ),
+               SizedBox(height: 16),
+               Row(
+                 mainAxisAlignment: MainAxisAlignment.end,
+                 children: [
+                   TextButton(onPressed: () => Navigator.pop(context), child: Text("বাতিল")),
+                   ElevatedButton(
+                     onPressed: () async {
+                        if (currentPoints.isNotEmpty) {
+                             final path = await _saveSignature(currentPoints);
+                             ref.read(formProvider.notifier).updateField(
+                               ref.read(formProvider).copyWith(applicantSignaturePath: path)
+                             );
+                             Navigator.pop(context);
+                        }
+                     },
+                     child: Text("সংরক্ষণ করুন")
+                   ),
+                 ],
+               )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<String> _saveSignature(List<Offset> points) async {
+      // 1. Calculate Bounds
+      double minX = double.infinity, minY = double.infinity;
+      double maxX = double.negativeInfinity, maxY = double.negativeInfinity;
+
+      for(var p in points) {
+          if (p != Offset.zero) {
+              if (p.dx < minX) minX = p.dx;
+              if (p.dy < minY) minY = p.dy;
+              if (p.dx > maxX) maxX = p.dx;
+              if (p.dy > maxY) maxY = p.dy;
+          }
+      }
+
+      // Handle empty or invalid drawing
+      if (minX == double.infinity) return "";
+
+      final width = maxX - minX + 20; // +Padding
+      final height = maxY - minY + 20;
+
+      // 2. Setup Canvas with correct size
+      final recorder = ui.PictureRecorder();
+      // We create a canvas large enough for the drawing relative to 0,0
+      final canvas = Canvas(recorder, Rect.fromPoints(Offset(0, 0), Offset(width, height)));
+      final paint = Paint()..color = Colors.black..strokeCap = StrokeCap.round..strokeWidth = 3.0;
+
+      // 3. Draw with Translation (Subtract minX, minY to move drawing to 0,0)
+      for (int i = 0; i < points.length - 1; i++) {
+        if (points[i] != Offset.zero && points[i + 1] != Offset.zero) {
+           canvas.drawLine(
+               points[i] - Offset(minX - 10, minY - 10),  // Shift to origin + padding
+               points[i+1] - Offset(minX - 10, minY - 10),
+               paint
+           );
+        }
+      }
+
+      final picture = recorder.endRecording();
+      final img = await picture.toImage(width.toInt(), height.toInt());
+      final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+      final buffer = byteData!.buffer.asUint8List();
+
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/signature_${DateTime.now().millisecondsSinceEpoch}.png');
+      await file.writeAsBytes(buffer);
+      return file.path;
   }
 
   void _generatePdf() async {
@@ -115,55 +208,20 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
                 Divider(),
                 _buildReviewRow("হিসাবের ধরন", form.accountType),
                 Divider(),
-                _buildReviewRow("পেশা", form.occupation),
-                Divider(),
                 _buildReviewRow("প্রাথমিক জমা", "${form.initialDeposit} টাকা"),
               ],
             ),
           ),
 
           SectionCard(
-            title: "ঝুঁকি বিশ্লেষণ (Risk Assessment)",
+            title: "সেবা ও সম্মতি (Services & Consent)",
             child: Column(
               children: [
-                 _buildReviewRow("ঝুঁকি স্কোর (Score)", form.riskScore.toString()),
+                 _buildReviewRow("চেক বই", form.requestChequeBook ? "হ্যাঁ" : "না"),
                  Divider(),
-                 Row(
-                   children: [
-                     Text("ঝুঁকি রেটিং (Rating): ", style: TextStyle(fontWeight: FontWeight.w500)),
-                     SizedBox(width: 10),
-                     Container(
-                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                       decoration: BoxDecoration(
-                         color: form.riskRating == 'High' ? Colors.red.shade100 : Colors.green.shade100,
-                         borderRadius: BorderRadius.circular(20),
-                         border: Border.all(color: form.riskRating == 'High' ? Colors.red : Colors.green),
-                       ),
-                       child: Text(
-                         form.riskRating,
-                         style: TextStyle(
-                           color: form.riskRating == 'High' ? Colors.red.shade900 : Colors.green.shade900,
-                           fontWeight: FontWeight.bold,
-                         ),
-                       ),
-                     ),
-                   ],
-                 )
-              ],
-            ),
-          ),
-
-          SectionCard(
-            title: "ঠিকানা যাচাই (Address Verification)",
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("বর্তমান ঠিকানা:", style: TextStyle(color: Colors.grey[700], fontSize: 12)),
-                Text(form.presentAddress.fullAddress, style: TextStyle(fontWeight: FontWeight.w600)),
-                SizedBox(height: 10),
-                Divider(),
-                Text("স্থায়ী ঠিকানা (NID অনুযায়ী):", style: TextStyle(color: Colors.grey[700], fontSize: 12)),
-                Text(form.permanentAddress.fullAddress, style: TextStyle(fontWeight: FontWeight.w600)),
+                 _buildReviewRow("SMS ব্যাংকিং", form.requestSmsBanking ? "হ্যাঁ" : "না"),
+                 Divider(),
+                 _buildReviewRow("মার্কিন নাগরিক (FATCA)", form.isUSCitizen ? "হ্যাঁ" : "না"),
               ],
             ),
           ),
@@ -177,7 +235,7 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
                 height: 150,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: (form.applicantSignaturePath != null &&
@@ -196,11 +254,11 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.edit_note,
+                          Icon(Icons.draw_outlined, // Changed icon
                               size: 40, color: Theme.of(context).primaryColor),
                           SizedBox(height: 8),
-                          Text("স্বাক্ষর দিতে এখানে ট্যাপ করুন",
-                              style: TextStyle(color: Colors.grey.shade600)),
+                          Text("ডিজিটাল স্বাক্ষর দিতে এখানে ট্যাপ করুন",
+                              style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
                         ],
                       ),
               ),

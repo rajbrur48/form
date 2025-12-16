@@ -9,8 +9,11 @@ class FormValidators {
 
   static String? validateNID(String? value) {
     if (value == null || value.isEmpty) return 'NID is required';
-    if (!RegExp(r'^\d+$').hasMatch(value)) return 'NID must contain only digits';
-    if (value.length != 10 && value.length != 13 && value.length != 17) {
+    // Remove any dashes or spaces
+    final cleanValue = value.replaceAll(RegExp(r'[\s-]'), '');
+    if (!RegExp(r'^\d+$').hasMatch(cleanValue)) return 'NID must contain only digits';
+
+    if (cleanValue.length != 10 && cleanValue.length != 13 && cleanValue.length != 17) {
       return 'NID must be 10, 13, or 17 digits';
     }
     return null;
@@ -18,7 +21,8 @@ class FormValidators {
 
   static String? validateMobile(String? value) {
     if (value == null || value.isEmpty) return 'Mobile number is required';
-    if (!RegExp(r'^01\d{9}$').hasMatch(value)) {
+    final cleanValue = value.replaceAll(RegExp(r'[\s-]'), '');
+    if (!RegExp(r'^01\d{9}$').hasMatch(cleanValue)) {
       return 'Invalid mobile number (must start with 01 and be 11 digits)';
     }
     return null;
@@ -29,6 +33,26 @@ class FormValidators {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(value)) {
       return 'Invalid email address';
+    }
+    return null;
+  }
+
+  static String? validateBangla(String? value, {String fieldName = 'This field'}) {
+    if (value == null || value.isEmpty) return null; // Let required check handle empty
+    // Unicode range for Bengali: \u0980-\u09FF
+    // We also allow spaces, dots, dashes for names.
+    final banglaRegex = RegExp(r'^[\u0980-\u09FF\s\.\-]+$');
+    if (!banglaRegex.hasMatch(value)) {
+      return '$fieldName must contain only Bangla characters';
+    }
+    return null;
+  }
+
+  static String? validateEnglish(String? value, {String fieldName = 'This field'}) {
+    if (value == null || value.isEmpty) return null;
+    final englishRegex = RegExp(r'^[a-zA-Z\s\.\-]+$');
+    if (!englishRegex.hasMatch(value)) {
+      return '$fieldName must contain only English characters';
     }
     return null;
   }

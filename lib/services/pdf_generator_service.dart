@@ -22,273 +22,213 @@ class PdfGeneratorService {
     }
 
     // Load Background Images
-    final bgPage1 = await loadImage('1.png');
-    final bgPage2 = await loadImage('2.png');
-    final bgPage3 = await loadImage('3.png');
-    final bgPage4 = await loadImage('4.png');
-    final bgPage5 = await loadImage('5.png');
-    final bgPage7 = await loadImage('7.png'); // Page 7 for Risk Score
-    final bgPage8 = await loadImage('8.png');
+    final bgPages = <int, pw.MemoryImage>{};
+    for(int i=1; i<=11; i++) {
+        try {
+            bgPages[i] = await loadImage('$i.png');
+        } catch (e) {
+            print("Error loading image $i.png: $e");
+        }
+    }
 
-    // Helper for Text Overlay
-    pw.Widget positionedText(String text, double x, double y, {double size = 10, bool isBold = false}) {
+    // Text Overlay Helper
+    pw.Widget positionedText(
+      String text,
+      double x,
+      double y,
+      {
+        double width = 200,
+        double size = 10,
+        bool isBold = false,
+        bool centered = false,
+        int maxLines = 1,
+      }) {
       return pw.Positioned(
         left: x,
         top: y,
-        child: pw.Text(
-          text,
-          style: pw.TextStyle(
-            font: isBold ? boldTtf : ttf,
-            fontSize: size,
+        child: pw.Container(
+          width: width,
+          child: pw.Text(
+            text,
+            maxLines: maxLines,
+            overflow: pw.TextOverflow.clip,
+            textAlign: centered ? pw.TextAlign.center : pw.TextAlign.left,
+            style: pw.TextStyle(
+              font: isBold ? boldTtf : ttf,
+              fontSize: size,
+            ),
           ),
         ),
       );
     }
 
-    // --- PAGE 1: Personal Info ---
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero, // FULL BLEED for background
-        build: (pw.Context context) {
-          return pw.Stack(
-            children: [
-              // 1. Background Image
-              pw.FullPage(
-                ignoreMargins: true,
-                child: pw.Image(bgPage1, fit: pw.BoxFit.fill),
-              ),
+    // Checkbox Helper (Draws a tick mark)
+    pw.Widget positionedCheckbox(bool value, double x, double y) {
+        if (!value) return pw.Container();
+        return pw.Positioned(
+            left: x, top: y,
+            child: pw.Text("✓", style: pw.TextStyle(font: boldTtf, fontSize: 16))
+        );
+    }
 
-              // 2. Applicant Photo (Top Right)
-              if (form.applicantPhotoPath != null)
-                pw.Positioned(
-                  left: 480,
-                  top: 130,
-                  child: pw.Container(
-                    width: 80,
-                    height: 90,
-                    child: pw.Image(pw.MemoryImage(File(form.applicantPhotoPath!).readAsBytesSync()), fit: pw.BoxFit.cover),
-                  ),
-                ),
-
-              // 3. Text Fields Overlays (Approximated Coordinates based on visual inspection of standard forms)
-              // Name Bangla
-              positionedText(form.applicantNameBangla, 180, 245, size: 12),
-
-              // Name English
-              positionedText(form.applicantNameEnglish, 180, 265, size: 12),
-
-              // NID Number
-              positionedText(form.nidNumber, 180, 310, size: 12),
-
-              // DOB
-              positionedText(form.dob, 400, 310, size: 12),
-
-              // Father Name
-              positionedText(form.fatherName, 180, 335, size: 12),
-
-              // Mother Name
-              positionedText(form.motherName, 180, 355, size: 12),
-
-              // Initial Deposit (Assuming Item 5 or similar on Page 1)
-              // Using arbitrary coordinates based on typical "Initial Deposit" location if visible,
-              // or bottom of page if not specified. User confirmed it is on Page 1 (3.png in their context, but 1.png here).
-              // Let's place it near bottom or check user provided 3.png context.
-              // In 3.png, Item 5 is Initial Deposit.
-              // Coordinate Estimation: Below Personal Info.
-              if (form.initialDeposit.isNotEmpty) ...[
-                 positionedText(form.initialDeposit, 180, 600, size: 12), // Figure
-                 positionedText(BanglaAmountConverter.convert(double.tryParse(form.initialDeposit) ?? 0), 300, 600, size: 12), // Words
-              ]
-            ],
-          );
-        },
-      ),
-    );
-
-    // --- PAGE 2: Address Information ---
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
-        build: (pw.Context context) {
-          return pw.Stack(
-            children: [
-              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage2, fit: pw.BoxFit.fill)),
-
-              // Granular Address Fields for Present Address
-              // Road / Village
-              positionedText(form.presentAddress.roadNo + ", " + form.presentAddress.village, 180, 100, size: 10),
-              // Post Office
-              positionedText(form.presentAddress.postOffice, 180, 120, size: 10),
-              // Post Code (often next to Post Office)
-              positionedText(form.presentAddress.postCode, 350, 120, size: 10),
-              // Thana / Police Station
-              positionedText(form.presentAddress.policeStation, 180, 140, size: 10),
-              // District
-              positionedText(form.presentAddress.district, 350, 140, size: 10),
-
-              // Granular Address Fields for Permanent Address
-              // Road / Village
-              positionedText(form.permanentAddress.roadNo + ", " + form.permanentAddress.village, 180, 250, size: 10),
-              // Post Office
-              positionedText(form.permanentAddress.postOffice, 180, 270, size: 10),
-              // Post Code
-              positionedText(form.permanentAddress.postCode, 350, 270, size: 10),
-              // Thana
-              positionedText(form.permanentAddress.policeStation, 180, 290, size: 10),
-              // District
-              positionedText(form.permanentAddress.district, 350, 290, size: 10),
-            ],
-          );
-        },
-      ),
-    );
-
-    // --- PAGE 3: Professional & Introducer ---
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
-        build: (pw.Context context) {
-          return pw.Stack(
-            children: [
-              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage3, fit: pw.BoxFit.fill)),
-
-              // Occupation
-              positionedText(form.occupation, 180, 100, size: 12),
-              // Monthly Income
-              positionedText(form.monthlyIncome, 180, 120, size: 12),
-
-              // Introducer Info
-              positionedText(form.introducerName, 180, 400, size: 12),
-              positionedText(form.introducerAccountNo, 180, 420, size: 12),
-            ],
-          );
-        },
-      ),
-    );
-
-    // --- PAGE 4: Nominee Info ---
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
-        build: (pw.Context context) {
-           final nominee = form.nominees.isNotEmpty ? form.nominees[0] : Nominee.empty();
-           return pw.Stack(
-            children: [
-              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage4, fit: pw.BoxFit.fill)),
-
-              // Nominee Name
-              positionedText(nominee.name, 180, 150, size: 12),
-              // Relation
-              positionedText(nominee.relation, 180, 170, size: 12),
-              // DOB
-              positionedText(nominee.dob, 400, 170, size: 12),
-              // NID
-              positionedText(nominee.nidNumber, 180, 190, size: 12),
-
-              // Nominee Photo (Top Right Box usually)
-              if (nominee.photoPath.isNotEmpty)
-                pw.Positioned(
-                  left: 480, top: 80,
-                  child: pw.Container(
-                    width: 80, height: 90,
-                    child: pw.Image(pw.MemoryImage(File(nominee.photoPath).readAsBytesSync()), fit: pw.BoxFit.cover),
-                  ),
-                ),
-            ],
-          );
-        },
-      ),
-    );
-
-    // --- PAGE 5: Transaction Profile ---
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
-        build: (pw.Context context) {
-           final tp = form.transactionProfile;
-           return pw.Stack(
-            children: [
-              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage5, fit: pw.BoxFit.fill)),
-
-              // Source of Fund
-              positionedText(tp.sourceOfFund, 250, 180, size: 12),
-              // Monthly Income
-              positionedText(tp.monthlyIncome, 250, 200, size: 12),
-
-              // Cash Deposit
-              positionedText(tp.cashDepositNum, 300, 300, size: 12),
-              positionedText(tp.cashDepositAmt, 400, 300, size: 12),
-            ],
-          );
-        },
-      ),
-    );
-
-    // --- Page 6 (Office Use) ---
-    // Just background for now, or copy previous loop logic if no content needed.
-    final bgPage6 = await loadImage('6.png');
-    pdf.addPage(pw.Page(
-        pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
-        build: (c) => pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage6, fit: pw.BoxFit.fill)),
-    ));
-
-    // --- PAGE 7: Risk Analysis ---
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
-        build: (pw.Context context) {
-          return pw.Stack(
-            children: [
-              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage7, fit: pw.BoxFit.fill)),
-
-              // Risk Score Total (Item 14)
-              // Coordinates estimated from 7.png (bottom section)
-              positionedText("${form.riskScore}", 300, 600, size: 14, isBold: true),
-
-              // Risk Rating (High/Low)
-              positionedText(form.riskRating, 300, 630, size: 14, isBold: true),
-
-              // Comments
-              positionedText(form.riskGradingComments, 100, 660, size: 10),
-            ],
-          );
-        },
-      ),
-    );
-
-    // --- PAGE 8: Beneficial Owner ---
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: pw.EdgeInsets.zero,
-        build: (pw.Context context) {
-          return pw.Stack(
-            children: [
-              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage8, fit: pw.BoxFit.fill)),
-
-              positionedText(form.beneficialOwnerName, 180, 150, size: 12),
-              positionedText(form.beneficialOwnerRelation, 180, 170, size: 12),
-              positionedText(form.beneficialOwnerDob, 400, 170, size: 12),
-              positionedText(form.beneficialOwnerNid, 180, 190, size: 12),
-            ],
-          );
-        },
-      ),
-    );
-
-    // --- Pages 9-11: Terms ---
-    for (int i = 9; i <= 11; i++) {
-        final bg = await loadImage('$i.png');
+    // --- PAGE 1 ---
+    if (bgPages.containsKey(1)) {
         pdf.addPage(pw.Page(
             pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
-            build: (c) => pw.FullPage(ignoreMargins: true, child: pw.Image(bg, fit: pw.BoxFit.fill)),
+            build: (c) => pw.Stack(children: [
+                pw.FullPage(ignoreMargins: true, child: pw.Image(bgPages[1]!, fit: pw.BoxFit.fill)),
+                if (form.applicantPhotoPath != null)
+                    pw.Positioned(
+                        left: 440, top: 110,
+                        child: pw.Container(width: 90, height: 100, child: pw.Image(pw.MemoryImage(File(form.applicantPhotoPath!).readAsBytesSync()), fit: pw.BoxFit.cover))
+                    ),
+                positionedText(form.applicantNameBangla, 140, 248, width: 250, size: 12),
+                positionedText(form.applicantNameEnglish, 140, 268, width: 250, size: 12),
+                positionedText(form.nidNumber, 140, 312, width: 150, size: 12),
+                positionedText(form.dob, 410, 312, width: 100, size: 12),
+                positionedText(form.fatherName, 140, 335, width: 250, size: 12),
+                positionedText(form.motherName, 140, 355, width: 250, size: 12),
+
+                 if (form.initialDeposit.isNotEmpty) ...[
+                     positionedText(form.initialDeposit, 180, 600, width: 100, size: 12),
+                     positionedText(BanglaAmountConverter.convert(double.tryParse(form.initialDeposit) ?? 0), 300, 600, width: 250, size: 12),
+                  ],
+
+                 // Service Requests (Checkboxes) - Assumed Coordinates on Page 1 Bottom or Page 2 Top
+                 // Placing hypothetically at bottom right of Page 1
+                 if(form.requestChequeBook) positionedText("Cheque Book Requested", 400, 650, width: 100, size: 8),
+                 if(form.requestSmsBanking) positionedText("SMS Banking Requested", 400, 665, width: 100, size: 8),
+            ])
         ));
+    }
+
+    // --- PAGE 2 ---
+     if (bgPages.containsKey(2)) {
+        pdf.addPage(pw.Page(
+            pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
+            build: (c) => pw.Stack(children: [
+                pw.FullPage(ignoreMargins: true, child: pw.Image(bgPages[2]!, fit: pw.BoxFit.fill)),
+                positionedText(form.presentAddress.roadNo + ", " + form.presentAddress.village, 160, 105, width: 350, size: 10, maxLines: 2),
+                positionedText(form.presentAddress.postOffice, 160, 128, width: 150, size: 10),
+                positionedText(form.presentAddress.postCode, 420, 128, width: 80, size: 10),
+                positionedText(form.presentAddress.policeStation, 160, 148, width: 150, size: 10),
+                positionedText(form.presentAddress.district, 420, 148, width: 100, size: 10),
+                positionedText(form.permanentAddress.roadNo + ", " + form.permanentAddress.village, 160, 245, width: 350, size: 10, maxLines: 2),
+                positionedText(form.permanentAddress.postOffice, 160, 268, width: 150, size: 10),
+                positionedText(form.permanentAddress.postCode, 420, 268, width: 80, size: 10),
+                positionedText(form.permanentAddress.policeStation, 160, 288, width: 150, size: 10),
+                positionedText(form.permanentAddress.district, 420, 288, width: 100, size: 10),
+                positionedText(form.mobileNumber, 160, 400, width: 150, size: 12),
+            ])
+        ));
+     }
+
+    // --- PAGE 3 ---
+    if (bgPages.containsKey(3)) {
+        pdf.addPage(pw.Page(
+             pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
+             build: (c) => pw.Stack(children: [
+                 pw.FullPage(ignoreMargins: true, child: pw.Image(bgPages[3]!, fit: pw.BoxFit.fill)),
+                 positionedText(form.occupation, 160, 105, width: 300, size: 12),
+                 positionedText(form.monthlyIncome, 160, 128, width: 200, size: 12),
+
+                 // FATCA Section (Usually Page 3 or 4) - Hypothetical Coordinates
+                 if (form.isUSCitizen) ...[
+                    positionedCheckbox(true, 150, 500), // Check "Yes" box
+                    positionedText(form.tinForeign, 200, 520, width: 150, size: 10),
+                    positionedText(form.residencyAddress, 200, 540, width: 300, size: 10),
+                 ] else ...[
+                    positionedCheckbox(true, 250, 500), // Check "No" box
+                 ],
+
+                 positionedText(form.introducerName, 160, 380, width: 250, size: 12),
+                 positionedText(form.introducerAccountNo, 160, 400, width: 200, size: 12),
+             ])
+        ));
+    }
+
+    // --- PAGE 4: Nominee ---
+    if (bgPages.containsKey(4)) {
+        pdf.addPage(pw.Page(
+             pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
+             build: (c) {
+                final nominee = form.nominees.isNotEmpty ? form.nominees[0] : Nominee.empty();
+                return pw.Stack(children: [
+                    pw.FullPage(ignoreMargins: true, child: pw.Image(bgPages[4]!, fit: pw.BoxFit.fill)),
+                    positionedText(nominee.name, 160, 160, width: 250, size: 12),
+                    positionedText(nominee.relation, 160, 182, width: 150, size: 12),
+                    positionedText(nominee.dob, 410, 182, width: 100, size: 12),
+                    positionedText(nominee.nidNumber, 160, 204, width: 200, size: 12),
+                    // Percentage
+                    positionedText("${nominee.percentage}%", 450, 204, width: 50, size: 12),
+
+                    if (nominee.photoPath.isNotEmpty)
+                        pw.Positioned(
+                            left: 440, top: 90,
+                            child: pw.Container(width: 90, height: 100, child: pw.Image(pw.MemoryImage(File(nominee.photoPath).readAsBytesSync()), fit: pw.BoxFit.cover))
+                        ),
+                ]);
+             }
+        ));
+    }
+
+    // --- PAGE 5 ---
+    if (bgPages.containsKey(5)) {
+        pdf.addPage(pw.Page(
+             pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
+             build: (c) {
+                 final tp = form.transactionProfile;
+                 return pw.Stack(children: [
+                    pw.FullPage(ignoreMargins: true, child: pw.Image(bgPages[5]!, fit: pw.BoxFit.fill)),
+                    positionedText(tp.sourceOfFund, 250, 185, width: 200, size: 11),
+                    positionedText(tp.monthlyIncome, 250, 208, width: 200, size: 11),
+                    positionedText(tp.cashDepositNum, 320, 310, width: 50, size: 11, centered: true),
+                    positionedText(tp.cashDepositAmt, 420, 310, width: 100, size: 11, centered: true),
+                 ]);
+             }
+        ));
+    }
+
+    // Remaining Pages
+    final remainingPages = [6, 7, 8, 9, 10, 11];
+    for (var i in remainingPages) {
+        if (bgPages.containsKey(i)) {
+            pdf.addPage(pw.Page(
+                pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
+                build: (c) {
+                    final stackChildren = <pw.Widget>[
+                        pw.FullPage(ignoreMargins: true, child: pw.Image(bgPages[i]!, fit: pw.BoxFit.fill)),
+                    ];
+
+                    if (i == 7) {
+                        stackChildren.add(positionedText("${form.riskScore}", 310, 595, width: 50, size: 14, isBold: true));
+                        stackChildren.add(positionedText(form.riskRating, 310, 625, width: 100, size: 14, isBold: true));
+                    }
+                    if (i == 8) {
+                        stackChildren.add(positionedText(form.beneficialOwnerName, 160, 160, width: 250, size: 12));
+                        stackChildren.add(positionedText(form.beneficialOwnerRelation, 160, 180, width: 150, size: 12));
+                        stackChildren.add(positionedText(form.beneficialOwnerDob, 410, 180, width: 100, size: 12));
+                        stackChildren.add(positionedText(form.beneficialOwnerNid, 160, 200, width: 200, size: 12));
+                    }
+
+                    // Signature on Terms Pages (usually Page 11)
+                    if (i == 11 && form.applicantSignaturePath != null && form.applicantSignaturePath!.isNotEmpty) {
+                         // Bottom Right Signature Block
+                         stackChildren.add(
+                             pw.Positioned(
+                                 left: 400, top: 700,
+                                 child: pw.Container(
+                                     width: 120, height: 60,
+                                     child: pw.Image(pw.MemoryImage(File(form.applicantSignaturePath!).readAsBytesSync()), fit: pw.BoxFit.contain)
+                                 )
+                             )
+                         );
+                    }
+
+                    return pw.Stack(children: stackChildren);
+                }
+            ));
+        }
     }
 
     return pdf.save();

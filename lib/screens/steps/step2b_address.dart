@@ -4,6 +4,7 @@ import '../../providers/form_provider.dart';
 import '../../models/application_form.dart';
 import '../components/form_components.dart';
 import '../../utils/form_validators.dart';
+import '../../utils/location_data.dart';
 
 class AddressStep extends ConsumerWidget {
   final VoidCallback onNext;
@@ -15,69 +16,99 @@ class AddressStep extends ConsumerWidget {
 
   Widget _buildAddressForm(BuildContext context, String title, Address address,
       Function(Address) onUpdate) {
+
+    // Helper to get dropdown items
+    List<DropdownMenuItem<String>> getItems(List<String> items) {
+      return items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList();
+    }
+
     return SectionCard(
       title: title,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextFormField(
+          CustomTextField(
+            label: "ফ্ল্যাট / বাড়ি নং",
             initialValue: address.flatNo,
-            decoration: InputDecoration(labelText: "ফ্ল্যাট / বাড়ি নং"),
-            textInputAction: TextInputAction.next,
             onChanged: (v) => onUpdate(address.copyWith(flatNo: v)),
           ),
-          SizedBox(height: 16),
-          TextFormField(
+          CustomTextField(
+            label: "রাস্তা / ব্লক / সেক্টর",
             initialValue: address.roadNo,
-            decoration: InputDecoration(labelText: "রাস্তা / ব্লক / সেক্টর"),
-            textInputAction: TextInputAction.next,
             onChanged: (v) => onUpdate(address.copyWith(roadNo: v)),
           ),
-          SizedBox(height: 16),
-          TextFormField(
+          CustomTextField(
+            label: "গ্রাম / এলাকা",
             initialValue: address.village,
-            decoration: InputDecoration(labelText: "গ্রাম / এলাকা"),
-            textInputAction: TextInputAction.next,
             validator: (v) => FormValidators.validateRequired(v, fieldName: 'Village/Area'),
             onChanged: (v) => onUpdate(address.copyWith(village: v)),
           ),
-          SizedBox(height: 16),
+
           Row(children: [
             Expanded(
-                child: TextFormField(
-              initialValue: address.postOffice,
-              decoration: InputDecoration(labelText: "ডাকঘর"),
-              textInputAction: TextInputAction.next,
-              validator: (v) => FormValidators.validateRequired(v, fieldName: 'Post Office'),
-              onChanged: (v) => onUpdate(address.copyWith(postOffice: v)),
-            )),
+                child: CustomTextField(
+                  label: "ডাকঘর",
+                  initialValue: address.postOffice,
+                  validator: (v) => FormValidators.validateRequired(v, fieldName: 'Post Office'),
+                  onChanged: (v) => onUpdate(address.copyWith(postOffice: v)),
+                ),
+            ),
             SizedBox(width: 16),
             Expanded(
-                child: TextFormField(
-              initialValue: address.postCode,
-              decoration: InputDecoration(labelText: "পোস্ট কোড"),
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.next,
-              validator: (v) => FormValidators.validateRequired(v, fieldName: 'Post Code'),
-              onChanged: (v) => onUpdate(address.copyWith(postCode: v)),
-            )),
+                child: CustomTextField(
+                  label: "পোস্ট কোড",
+                  initialValue: address.postCode,
+                  keyboardType: TextInputType.number,
+                  validator: (v) => FormValidators.validateRequired(v, fieldName: 'Post Code'),
+                  onChanged: (v) => onUpdate(address.copyWith(postCode: v)),
+                ),
+            ),
           ]),
-          SizedBox(height: 16),
-          TextFormField(
-            initialValue: address.policeStation,
-            decoration: InputDecoration(labelText: "থানা"),
-            textInputAction: TextInputAction.next,
-            validator: (v) => FormValidators.validateRequired(v, fieldName: 'Police Station'),
-            onChanged: (v) => onUpdate(address.copyWith(policeStation: v)),
+
+          // --- SMART LOCATION PICKER ---
+          // Division
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(labelText: "বিভাগ (Division)"),
+            value: LocationData.getDivisions().contains(address.division) ? address.division : null,
+            items: getItems(LocationData.getDivisions()),
+            onChanged: (val) {
+              if (val != null) {
+                // Reset District and Thana when Division changes
+                onUpdate(address.copyWith(division: val, district: '', policeStation: ''));
+              }
+            },
+            validator: (v) => FormValidators.validateRequired(v, fieldName: 'Division'),
           ),
           SizedBox(height: 16),
-          TextFormField(
-            initialValue: address.district,
-            decoration: InputDecoration(labelText: "জেলা"),
-            textInputAction: TextInputAction.next,
+
+          // District
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(labelText: "জেলা (District)"),
+            value: LocationData.getDistricts(address.division).contains(address.district) ? address.district : null,
+            items: getItems(LocationData.getDistricts(address.division)),
+            onChanged: address.division.isNotEmpty ? (val) {
+              if (val != null) {
+                // Reset Thana when District changes
+                onUpdate(address.copyWith(district: val, policeStation: ''));
+              }
+            } : null, // Disable if division not selected
             validator: (v) => FormValidators.validateRequired(v, fieldName: 'District'),
-            onChanged: (v) => onUpdate(address.copyWith(district: v)),
           ),
+          SizedBox(height: 16),
+
+          // Thana
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(labelText: "থানা (Thana)"),
+            value: LocationData.getThanas(address.division, address.district).contains(address.policeStation) ? address.policeStation : null,
+            items: getItems(LocationData.getThanas(address.division, address.district)),
+            onChanged: address.district.isNotEmpty ? (val) {
+              if (val != null) {
+                onUpdate(address.copyWith(policeStation: val));
+              }
+            } : null,
+            validator: (v) => FormValidators.validateRequired(v, fieldName: 'Thana'),
+          ),
+          SizedBox(height: 16),
         ],
       ),
     );
@@ -109,17 +140,16 @@ class AddressStep extends ConsumerWidget {
                 title: "যোগাযোগ",
                 child: Column(
                     children: [
-                        TextFormField(
+                        CustomTextField(
+                            label: "মোবাইল নম্বর",
                             initialValue: form.mobileNumber,
-                            decoration: InputDecoration(labelText: "মোবাইল নম্বর", prefixText: "+88 "),
                             keyboardType: TextInputType.phone,
                             validator: FormValidators.validateMobile,
                             onChanged: (v) => notifier.updateField(form.copyWith(mobileNumber: v)),
                         ),
-                        SizedBox(height: 16),
-                        TextFormField(
+                        CustomTextField(
+                            label: "ইমেইল (যদি থাকে)",
                             initialValue: form.email,
-                            decoration: InputDecoration(labelText: "ইমেইল (যদি থাকে)"),
                             keyboardType: TextInputType.emailAddress,
                             validator: FormValidators.validateEmail,
                             onChanged: (v) => notifier.updateField(form.copyWith(email: v)),
@@ -134,7 +164,12 @@ class AddressStep extends ConsumerWidget {
                  if (_formKey.currentState!.validate()) {
                      onNext();
                  } else {
-                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please fix errors.")));
+                     ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(
+                             content: Text("অনুগ্রহ করে ঠিকানার তথ্য সঠিকভাবে পূরণ করুন"),
+                             backgroundColor: Theme.of(context).colorScheme.error,
+                         )
+                     );
                  }
               },
             ),

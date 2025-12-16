@@ -40,6 +40,14 @@ class ApplicationForm {
   // --- Transaction Profile (Page 5) ---
   TransactionProfile transactionProfile;
 
+  // --- Services (New Page 5b) ---
+  bool isUSCitizen;
+  String tinForeign;
+  String residencyAddress;
+  bool requestChequeBook;
+  bool requestSmsBanking;
+  bool requestInternetBanking;
+
   // --- Images (Paths) ---
   String? applicantPhotoPath;
   String? applicantSignaturePath;
@@ -52,10 +60,12 @@ class ApplicationForm {
   String beneficialOwnerDob;
   String beneficialOwnerNid;
 
-  // --- Office Use / Risk Grading (Page 6-9) ---
+  // --- Terms & Risk (Page 6-11) ---
   int riskScore;
   String riskRating; // High/Low
   String riskGradingComments;
+  bool hasAgreedToTerms;
+  String agreementDate;
 
   ApplicationForm({
     this.accountType = 'Savings',
@@ -85,6 +95,12 @@ class ApplicationForm {
     this.introducerBranch = '',
     this.nominees = const [],
     required this.transactionProfile,
+    this.isUSCitizen = false,
+    this.tinForeign = '',
+    this.residencyAddress = '',
+    this.requestChequeBook = false,
+    this.requestSmsBanking = false,
+    this.requestInternetBanking = false,
     this.applicantPhotoPath,
     this.applicantSignaturePath,
     this.nidFrontPath,
@@ -96,6 +112,8 @@ class ApplicationForm {
     this.riskScore = 0,
     this.riskRating = 'Low',
     this.riskGradingComments = '',
+    this.hasAgreedToTerms = false,
+    this.agreementDate = '',
   });
 
   factory ApplicationForm.empty() {
@@ -135,6 +153,12 @@ class ApplicationForm {
     String? introducerBranch,
     List<Nominee>? nominees,
     TransactionProfile? transactionProfile,
+    bool? isUSCitizen,
+    String? tinForeign,
+    String? residencyAddress,
+    bool? requestChequeBook,
+    bool? requestSmsBanking,
+    bool? requestInternetBanking,
     String? applicantPhotoPath,
     String? applicantSignaturePath,
     String? nidFrontPath,
@@ -146,6 +170,8 @@ class ApplicationForm {
     int? riskScore,
     String? riskRating,
     String? riskGradingComments,
+    bool? hasAgreedToTerms,
+    String? agreementDate,
   }) {
     return ApplicationForm(
       accountType: accountType ?? this.accountType,
@@ -175,6 +201,12 @@ class ApplicationForm {
       introducerBranch: introducerBranch ?? this.introducerBranch,
       nominees: nominees ?? this.nominees,
       transactionProfile: transactionProfile ?? this.transactionProfile,
+      isUSCitizen: isUSCitizen ?? this.isUSCitizen,
+      tinForeign: tinForeign ?? this.tinForeign,
+      residencyAddress: residencyAddress ?? this.residencyAddress,
+      requestChequeBook: requestChequeBook ?? this.requestChequeBook,
+      requestSmsBanking: requestSmsBanking ?? this.requestSmsBanking,
+      requestInternetBanking: requestInternetBanking ?? this.requestInternetBanking,
       applicantPhotoPath: applicantPhotoPath ?? this.applicantPhotoPath,
       applicantSignaturePath: applicantSignaturePath ?? this.applicantSignaturePath,
       nidFrontPath: nidFrontPath ?? this.nidFrontPath,
@@ -186,6 +218,8 @@ class ApplicationForm {
       riskScore: riskScore ?? this.riskScore,
       riskRating: riskRating ?? this.riskRating,
       riskGradingComments: riskGradingComments ?? this.riskGradingComments,
+      hasAgreedToTerms: hasAgreedToTerms ?? this.hasAgreedToTerms,
+      agreementDate: agreementDate ?? this.agreementDate,
     );
   }
 
@@ -217,6 +251,12 @@ class ApplicationForm {
     'introducerBranch': introducerBranch,
     'nominees': nominees.map((x) => x.toJson()).toList(),
     'transactionProfile': transactionProfile.toJson(),
+    'isUSCitizen': isUSCitizen,
+    'tinForeign': tinForeign,
+    'residencyAddress': residencyAddress,
+    'requestChequeBook': requestChequeBook,
+    'requestSmsBanking': requestSmsBanking,
+    'requestInternetBanking': requestInternetBanking,
     'applicantPhotoPath': applicantPhotoPath,
     'applicantSignaturePath': applicantSignaturePath,
     'nidFrontPath': nidFrontPath,
@@ -228,6 +268,8 @@ class ApplicationForm {
     'riskScore': riskScore,
     'riskRating': riskRating,
     'riskGradingComments': riskGradingComments,
+    'hasAgreedToTerms': hasAgreedToTerms,
+    'agreementDate': agreementDate,
   };
 
   factory ApplicationForm.fromJson(Map<String, dynamic> json) => ApplicationForm(
@@ -262,6 +304,12 @@ class ApplicationForm {
     transactionProfile: json['transactionProfile'] != null
         ? TransactionProfile.fromJson(json['transactionProfile'])
         : TransactionProfile.empty(),
+    isUSCitizen: json['isUSCitizen'] ?? false,
+    tinForeign: json['tinForeign'] ?? '',
+    residencyAddress: json['residencyAddress'] ?? '',
+    requestChequeBook: json['requestChequeBook'] ?? false,
+    requestSmsBanking: json['requestSmsBanking'] ?? false,
+    requestInternetBanking: json['requestInternetBanking'] ?? false,
     applicantPhotoPath: json['applicantPhotoPath'],
     applicantSignaturePath: json['applicantSignaturePath'],
     nidFrontPath: json['nidFrontPath'],
@@ -273,6 +321,8 @@ class ApplicationForm {
     riskScore: json['riskScore'] ?? 0,
     riskRating: json['riskRating'] ?? 'Low',
     riskGradingComments: json['riskGradingComments'] ?? '',
+    hasAgreedToTerms: json['hasAgreedToTerms'] ?? false,
+    agreementDate: json['agreementDate'] ?? '',
   );
 }
 
@@ -284,6 +334,7 @@ class Address {
   String postCode;
   String policeStation;
   String district;
+  String division; // Added division
 
   Address({
     this.flatNo = '',
@@ -293,6 +344,7 @@ class Address {
     this.postCode = '',
     this.policeStation = '',
     this.district = '',
+    this.division = '',
   });
 
   factory Address.empty() => Address();
@@ -305,6 +357,7 @@ class Address {
     String? postCode,
     String? policeStation,
     String? district,
+    String? division,
   }) {
     return Address(
       flatNo: flatNo ?? this.flatNo,
@@ -314,6 +367,7 @@ class Address {
       postCode: postCode ?? this.postCode,
       policeStation: policeStation ?? this.policeStation,
       district: district ?? this.district,
+      division: division ?? this.division,
     );
   }
 
@@ -327,6 +381,7 @@ class Address {
     'postCode': postCode,
     'policeStation': policeStation,
     'district': district,
+    'division': division,
   };
 
   factory Address.fromJson(Map<String, dynamic> json) => Address(
@@ -337,6 +392,7 @@ class Address {
     postCode: json['postCode'] ?? '',
     policeStation: json['policeStation'] ?? '',
     district: json['district'] ?? '',
+    division: json['division'] ?? '',
   );
 }
 

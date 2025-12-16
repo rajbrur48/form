@@ -103,6 +103,11 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       riskRating: rating,
     );
   }
+
+  Future<void> clearForm() async {
+    await _storageService.clearForm();
+    state = ApplicationForm.empty();
+  }
 }
 
 final formProvider = StateNotifierProvider<FormNotifier, ApplicationForm>((ref) {
