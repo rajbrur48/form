@@ -201,6 +201,26 @@ class Address {
 
   factory Address.empty() => Address();
 
+  Address copyWith({
+    String? flatNo,
+    String? roadNo,
+    String? village,
+    String? postOffice,
+    String? postCode,
+    String? policeStation,
+    String? district,
+  }) {
+    return Address(
+      flatNo: flatNo ?? this.flatNo,
+      roadNo: roadNo ?? this.roadNo,
+      village: village ?? this.village,
+      postOffice: postOffice ?? this.postOffice,
+      postCode: postCode ?? this.postCode,
+      policeStation: policeStation ?? this.policeStation,
+      district: district ?? this.district,
+    );
+  }
+
   String get fullAddress => [flatNo, roadNo, village, postOffice, policeStation, district].where((s) => s.isNotEmpty).join(', ');
 }
 

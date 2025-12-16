@@ -35,8 +35,11 @@ class _MainFormScreenState extends ConsumerState<MainFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFF5F7FA), // Explicit background for contrast
       appBar: AppBar(
         title: Text("হিসাব খোলার আবেদন ফরম"),
+        centerTitle: true,
+        elevation: 0,
         actions: [
           IconButton(
             icon: Icon(Icons.bolt),
@@ -44,94 +47,133 @@ class _MainFormScreenState extends ConsumerState<MainFormScreen> {
             onPressed: () {
               final mock = MockData.getCompleteMockForm();
               ref.read(formProvider.notifier).updateField(mock);
-              // Also mocked paths if needed, but file paths need real files or will fail
-              // We can't easily mock file paths in web/linux easily without copy
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("ডেমো তথ্য পূরণ করা হয়েছে")),
+              );
             },
           )
         ],
       ),
       body: Column(
         children: [
-          // Custom Stepper Header (Modern)
-          Container(
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0,2))]
-            ),
-            child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                itemCount: _steps.length,
-                itemBuilder: (c, i) {
-                   bool isActive = i == _currentStep;
-                   bool isCompleted = i < _currentStep;
-                   return Container(
-                       margin: EdgeInsets.symmetric(horizontal: 8),
-                       child: Column(
-                         mainAxisAlignment: MainAxisAlignment.center,
-                         children: [
-                           Container(
-                             width: 30, height: 30,
-                             decoration: BoxDecoration(
-                               shape: BoxShape.circle,
-                               color: isActive ? Theme.of(context).primaryColor : (isCompleted ? Colors.green : Colors.grey[300]),
-                             ),
-                             child: Center(
-                               child: isCompleted
-                                 ? Icon(Icons.check, color: Colors.white, size: 18)
-                                 : Text("${i+1}", style: TextStyle(color: isActive ? Colors.white : Colors.grey[600])),
-                             ),
-                           ),
-                           SizedBox(height: 4),
-                           Text(
-                               _steps[i],
-                               style: TextStyle(
-                                   fontSize: 12,
-                                   fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                                   color: isActive ? Theme.of(context).primaryColor : Colors.grey
-                               )
-                           ),
-                         ],
-                       ),
-                   );
-                },
-            ),
-          ),
+          // Modern Stepper
+          _buildModernStepper(context),
+
           Expanded(
             child: IndexedStack(
               index: _currentStep,
               children: [
-                IdentityVerificationStep(onNext: () => setState(() => _currentStep++)),
+                IdentityVerificationStep(
+                    onNext: () => setState(() => _currentStep++)),
                 PersonalInfoStep(
-                    onNext: () => setState(() => _currentStep++),
-                    onBack: () => setState(() => _currentStep--),
+                  onNext: () => setState(() => _currentStep++),
+                  onBack: () => setState(() => _currentStep--),
                 ),
                 AddressStep(
-                    onNext: () => setState(() => _currentStep++),
-                    onBack: () => setState(() => _currentStep--),
+                  onNext: () => setState(() => _currentStep++),
+                  onBack: () => setState(() => _currentStep--),
                 ),
                 ProfessionalStep(
-                    onNext: () => setState(() => _currentStep++),
-                    onBack: () => setState(() => _currentStep--),
+                  onNext: () => setState(() => _currentStep++),
+                  onBack: () => setState(() => _currentStep--),
                 ),
                 NomineeStep(
-                    onNext: () => setState(() => _currentStep++),
-                    onBack: () => setState(() => _currentStep--),
+                  onNext: () => setState(() => _currentStep++),
+                  onBack: () => setState(() => _currentStep--),
                 ),
                 TransactionProfileStep(
-                    onNext: () => setState(() => _currentStep++),
-                    onBack: () => setState(() => _currentStep--),
+                  onNext: () => setState(() => _currentStep++),
+                  onBack: () => setState(() => _currentStep--),
                 ),
                 BeneficialOwnerStep(
-                    onNext: () => setState(() => _currentStep++),
-                    onBack: () => setState(() => _currentStep--),
+                  onNext: () => setState(() => _currentStep++),
+                  onBack: () => setState(() => _currentStep--),
                 ),
                 ReviewStep(),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildModernStepper(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: List.generate(_steps.length, (index) {
+                bool isActive = index == _currentStep;
+                bool isCompleted = index < _currentStep;
+                bool isLast = index == _steps.length - 1;
+
+                return Row(
+                  children: [
+                    _buildStepCircle(index, isActive, isCompleted),
+                    if (!isLast)
+                      Container(
+                        width: 20,
+                        height: 2,
+                        margin: EdgeInsets.symmetric(horizontal: 4),
+                        color: isCompleted
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey.shade300,
+                      ),
+                  ],
+                );
+              }),
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            _steps[_currentStep],
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepCircle(int index, bool isActive, bool isCompleted) {
+    Color color = isCompleted
+        ? Theme.of(context).primaryColor
+        : (isActive ? Theme.of(context).primaryColor : Colors.grey.shade300);
+
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      width: isActive ? 32 : 24,
+      height: isActive ? 32 : 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isActive ? color : Colors.transparent,
+        border: Border.all(color: color, width: 2),
+      ),
+      child: Center(
+        child: isCompleted
+            ? Icon(Icons.check, size: 14, color: color) // Checkmark only if not active background
+            : (isActive
+                ? Text(
+                    "${index + 1}",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
+                  )
+                : Text(
+                    "${index + 1}",
+                    style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
+                  )),
       ),
     );
   }

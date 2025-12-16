@@ -5,12 +5,14 @@ import '../../models/application_form.dart';
 import '../../services/nid_ocr_service.dart';
 import '../../utils/mock_data.dart';
 import '../camera_screen.dart';
+import '../components/form_components.dart';
 import 'dart:io';
 
 class IdentityVerificationStep extends ConsumerWidget {
   final VoidCallback onNext;
 
-  const IdentityVerificationStep({Key? key, required this.onNext}) : super(key: key);
+  const IdentityVerificationStep({Key? key, required this.onNext})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,62 +20,71 @@ class IdentityVerificationStep extends ConsumerWidget {
     final ocrService = NidOcrService();
 
     void _scanNidFront() {
-      Navigator.push(context, MaterialPageRoute(
-        builder: (c) => CameraScreen(
-          label: "Scan NID Front",
-          onImageCaptured: (file) async {
-            // Update image path immediately
-            ref.read(formProvider.notifier).setImages(nidFront: file.path);
-
-            // Process OCR
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Processing OCR...")));
-            try {
-                final data = await ocrService.processNidFront(file);
-                ref.read(formProvider.notifier).updatePersonalDetails(
-                    nameBangla: data.nameBangla,
-                    nameEnglish: data.nameEnglish,
-                    dob: data.dob,
-                    nid: data.nidNumber,
-                );
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Data Extracted!")));
-            } catch(e) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("OCR Failed: $e")));
-            }
-          },
-        ),
-      ));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (c) => CameraScreen(
+              label: "Scan NID Front",
+              onImageCaptured: (file) async {
+                ref.read(formProvider.notifier).setImages(nidFront: file.path);
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text("Processing OCR...")));
+                try {
+                  final data = await ocrService.processNidFront(file);
+                  ref.read(formProvider.notifier).updatePersonalDetails(
+                        nameBangla: data.nameBangla,
+                        nameEnglish: data.nameEnglish,
+                        dob: data.dob,
+                        nid: data.nidNumber,
+                      );
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text("Data Extracted!")));
+                } catch (e) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text("OCR Failed: $e")));
+                }
+              },
+            ),
+          ));
     }
 
     void _scanNidBack() {
-      Navigator.push(context, MaterialPageRoute(
-        builder: (c) => CameraScreen(
-          label: "Scan NID Back",
-          onImageCaptured: (file) async {
-            ref.read(formProvider.notifier).setImages(nidBack: file.path);
-             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Processing Back Side...")));
-             try {
-                 String addr = await ocrService.processNidBack(file);
-                 // Heuristic: Last line is often District/Upazila
-                 // This requires smarter parsing in production
-                 ref.read(formProvider.notifier).updateAddress(
-                     isPermanent: true,
-                     village: addr.length > 20 ? addr.substring(0, 20) : addr, // Placeholder logic
-                 );
-             } catch(e) {}
-          },
-        ),
-      ));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (c) => CameraScreen(
+              label: "Scan NID Back",
+              onImageCaptured: (file) async {
+                ref.read(formProvider.notifier).setImages(nidBack: file.path);
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Processing Back Side...")));
+                try {
+                  String addr = await ocrService.processNidBack(file);
+                  ref.read(formProvider.notifier).updateAddress(
+                        isPermanent: true,
+                        village: addr.length > 20
+                            ? addr.substring(0, 20)
+                            : addr,
+                      );
+                } catch (e) {}
+              },
+            ),
+          ));
     }
 
     void _takePhoto() {
-      Navigator.push(context, MaterialPageRoute(
-        builder: (c) => CameraScreen(
-          label: "Applicant Photo",
-          onImageCaptured: (file) {
-            ref.read(formProvider.notifier).setImages(applicantPhoto: file.path);
-          },
-        ),
-      ));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (c) => CameraScreen(
+              label: "Applicant Photo",
+              onImageCaptured: (file) {
+                ref
+                    .read(formProvider.notifier)
+                    .setImages(applicantPhoto: file.path);
+              },
+            ),
+          ));
     }
 
     return SingleChildScrollView(
@@ -81,68 +92,99 @@ class IdentityVerificationStep extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("পরিচয় যাচাইকরণ", style: Theme.of(context).textTheme.headlineSmall),
-          SizedBox(height: 10),
+          SectionCard(
+            title: "পরিচয় যাচাইকরণ",
+            child: Column(
+              children: [
+                _buildModernImageCard(
+                  context,
+                  "জাতীয় পরিচয়পত্র (সামনের অংশ)",
+                  form.nidFrontPath,
+                  _scanNidFront,
+                ),
+                SizedBox(height: 16),
+                _buildModernImageCard(
+                  context,
+                  "জাতীয় পরিচয়পত্র (পেছনের অংশ)",
+                  form.nidBackPath,
+                  _scanNidBack,
+                ),
+                SizedBox(height: 16),
+                _buildModernImageCard(
+                  context,
+                  "আবেদনকারীর ছবি",
+                  form.applicantPhotoPath,
+                  _takePhoto,
+                ),
+              ],
+            ),
+          ),
+
           Center(
             child: TextButton.icon(
               icon: Icon(Icons.flash_on, size: 16),
               label: Text("স্বয়ংক্রিয় পূরণ (ডেমো)"),
               style: TextButton.styleFrom(foregroundColor: Colors.orange),
               onPressed: () {
-                ref.read(formProvider.notifier).updateField(MockData.getCompleteMockForm());
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("তথ্য পূরণ করা হয়েছে!")));
+                ref
+                    .read(formProvider.notifier)
+                    .updateField(MockData.getCompleteMockForm());
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text("তথ্য পূরণ করা হয়েছে!")));
               },
             ),
           ),
-          SizedBox(height: 10),
 
-          _buildImageCard(
-              "জাতীয় পরিচয়পত্র (সামনের অংশ)",
-              form.nidFrontPath,
-              _scanNidFront
-          ),
-          SizedBox(height: 10),
-          _buildImageCard(
-              "জাতীয় পরিচয়পত্র (পেছনের অংশ)",
-              form.nidBackPath,
-              _scanNidBack
-          ),
-          SizedBox(height: 10),
-          _buildImageCard(
-              "আবেদনকারীর ছবি",
-              form.applicantPhotoPath,
-              _takePhoto
-          ),
-
-          SizedBox(height: 20),
-          ElevatedButton(
-            // Allow next if mock data filled (check name) OR images present
-            onPressed: onNext,
-            child: Text("পরবর্তী"),
+          StepNavigationButtons(
+            onNext: onNext,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildImageCard(String label, String? path, VoidCallback onTap) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          height: 150,
-          padding: EdgeInsets.all(8),
-          child: Column(
-            children: [
-              Expanded(
-                child: path != null
-                    ? Image.file(File(path), fit: BoxFit.cover)
-                    : Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
-              ),
-              Text(label),
-            ],
+  Widget _buildModernImageCard(
+      BuildContext context, String label, String? path, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        height: 180,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: path != null
+                ? Theme.of(context).primaryColor
+                : Colors.grey.shade300,
+            width: path != null ? 2 : 1,
+            style: path != null ? BorderStyle.solid : BorderStyle.none, // dashed border logic requires CustomPainter, keeping simple for now
           ),
         ),
+        child: path != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.file(File(path), fit: BoxFit.cover),
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.camera_alt_outlined,
+                      size: 40, color: Theme.of(context).primaryColor),
+                  SizedBox(height: 12),
+                  Text(
+                    label,
+                    style: TextStyle(
+                        color: Colors.grey.shade700, fontWeight: FontWeight.w500),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "স্ক্যান করতে ট্যাপ করুন",
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  ),
+                ],
+              ),
       ),
     );
   }
