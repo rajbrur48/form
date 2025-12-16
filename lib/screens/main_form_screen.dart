@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'steps/step1_identity.dart';
+import 'steps/step2_personal.dart';
+import 'steps/step2b_address.dart';
+import 'steps/step3_professional.dart';
+import 'steps/step4_nominee.dart';
+import 'steps/step5_tp.dart';
+import 'steps/step7_beneficial_owner.dart';
+import 'steps/step6_review.dart';
+
+// We will build the wrapper here
+class MainFormScreen extends StatefulWidget {
+  @override
+  _MainFormScreenState createState() => _MainFormScreenState();
+}
+
+class _MainFormScreenState extends State<MainFormScreen> {
+  int _currentStep = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Account Opening Form")),
+      body: Column(
+        children: [
+          // Custom Stepper Header
+          Container(
+            height: 60,
+            child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: 8,
+                itemBuilder: (c, i) => Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    child: Text(
+                        "Step ${i+1}",
+                        style: TextStyle(
+                            fontWeight: i == _currentStep ? FontWeight.bold : FontWeight.normal,
+                            color: i == _currentStep ? Colors.blue : Colors.grey
+                        )
+                    ),
+                ),
+            ),
+          ),
+          Expanded(
+            child: IndexedStack(
+              index: _currentStep,
+              children: [
+                IdentityVerificationStep(onNext: () => setState(() => _currentStep++)),
+                PersonalInfoStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
+                AddressStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
+                ProfessionalStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
+                NomineeStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
+                TransactionProfileStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
+                BeneficialOwnerStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
+                ReviewStep(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
