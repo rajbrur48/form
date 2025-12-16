@@ -52,8 +52,9 @@ class ApplicationForm {
   String beneficialOwnerNid;
 
   // --- Office Use / Risk Grading (Page 6-9) ---
-  // These might be calculated or left blank, but we need structure
-  String riskGradingScore;
+  // Updated types for better handling
+  int riskScore;
+  String riskRating; // High/Low
   String riskGradingComments;
 
   ApplicationForm({
@@ -91,7 +92,8 @@ class ApplicationForm {
     this.beneficialOwnerRelation = '',
     this.beneficialOwnerDob = '',
     this.beneficialOwnerNid = '',
-    this.riskGradingScore = '',
+    this.riskScore = 0,
+    this.riskRating = 'Low',
     this.riskGradingComments = '',
   });
 
@@ -140,6 +142,9 @@ class ApplicationForm {
     String? beneficialOwnerRelation,
     String? beneficialOwnerDob,
     String? beneficialOwnerNid,
+    int? riskScore,
+    String? riskRating,
+    String? riskGradingComments,
   }) {
     return ApplicationForm(
       accountType: accountType ?? this.accountType,
@@ -176,6 +181,9 @@ class ApplicationForm {
       beneficialOwnerRelation: beneficialOwnerRelation ?? this.beneficialOwnerRelation,
       beneficialOwnerDob: beneficialOwnerDob ?? this.beneficialOwnerDob,
       beneficialOwnerNid: beneficialOwnerNid ?? this.beneficialOwnerNid,
+      riskScore: riskScore ?? this.riskScore,
+      riskRating: riskRating ?? this.riskRating,
+      riskGradingComments: riskGradingComments ?? this.riskGradingComments,
     );
   }
 }
@@ -284,4 +292,38 @@ class TransactionProfile {
   });
 
   factory TransactionProfile.empty() => TransactionProfile();
+
+  TransactionProfile copyWith({
+    String? sourceOfFund,
+    String? monthlyIncome,
+    String? cashDepositNum,
+    String? cashDepositAmt,
+    String? transferDepositNum,
+    String? transferDepositAmt,
+    String? foreignRemittanceNum,
+    String? foreignRemittanceAmt,
+    String? exportProceedsNum,
+    String? exportProceedsAmt,
+    String? cashWithdrawalNum,
+    String? cashWithdrawalAmt,
+    String? transferWithdrawalNum,
+    String? transferWithdrawalAmt,
+  }) {
+    return TransactionProfile(
+      sourceOfFund: sourceOfFund ?? this.sourceOfFund,
+      monthlyIncome: monthlyIncome ?? this.monthlyIncome,
+      cashDepositNum: cashDepositNum ?? this.cashDepositNum,
+      cashDepositAmt: cashDepositAmt ?? this.cashDepositAmt,
+      transferDepositNum: transferDepositNum ?? this.transferDepositNum,
+      transferDepositAmt: transferDepositAmt ?? this.transferDepositAmt,
+      foreignRemittanceNum: foreignRemittanceNum ?? this.foreignRemittanceNum,
+      foreignRemittanceAmt: foreignRemittanceAmt ?? this.foreignRemittanceAmt,
+      exportProceedsNum: exportProceedsNum ?? this.exportProceedsNum,
+      exportProceedsAmt: exportProceedsAmt ?? this.exportProceedsAmt,
+      cashWithdrawalNum: cashWithdrawalNum ?? this.cashWithdrawalNum,
+      cashWithdrawalAmt: cashWithdrawalAmt ?? this.cashWithdrawalAmt,
+      transferWithdrawalNum: transferWithdrawalNum ?? this.transferWithdrawalNum,
+      transferWithdrawalAmt: transferWithdrawalAmt ?? this.transferWithdrawalAmt,
+    );
+  }
 }

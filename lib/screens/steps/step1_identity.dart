@@ -59,14 +59,22 @@ class IdentityVerificationStep extends ConsumerWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Processing Back Side...")));
                 try {
-                  String addr = await ocrService.processNidBack(file);
+                  final addressData = await ocrService.processNidBack(file);
                   ref.read(formProvider.notifier).updateAddress(
                         isPermanent: true,
-                        village: addr.length > 20
-                            ? addr.substring(0, 20)
-                            : addr,
+                        flatNo: addressData.flatNo,
+                        village: addressData.village,
+                        postOffice: addressData.postOffice,
+                        postCode: addressData.postCode,
+                        policeStation: addressData.policeStation,
+                        district: addressData.district,
                       );
-                } catch (e) {}
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text("Address Extracted!")));
+                } catch (e) {
+                   ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text("Address OCR Failed: $e")));
+                }
               },
             ),
           ));

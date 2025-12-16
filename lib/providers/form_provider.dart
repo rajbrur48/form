@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/application_form.dart';
 import '../utils/mock_data.dart';
+import '../utils/risk_calculator.dart';
 
 class FormNotifier extends StateNotifier<ApplicationForm> {
   FormNotifier() : super(ApplicationForm.empty());
@@ -21,32 +22,40 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       dob: dob,
       nidNumber: nid,
     );
+    _calculateRisk();
   }
 
   void updateAddress({
     required bool isPermanent,
+    String? flatNo,
+    String? roadNo,
     String? village,
     String? postOffice,
     String? policeStation,
     String? district,
     String? postCode,
   }) {
-    final newAddress = Address(
-      village: village ?? (isPermanent ? state.permanentAddress.village : state.presentAddress.village),
-      postOffice: postOffice ?? (isPermanent ? state.permanentAddress.postOffice : state.presentAddress.postOffice),
-      policeStation: policeStation ?? (isPermanent ? state.permanentAddress.policeStation : state.presentAddress.policeStation),
-      district: district ?? (isPermanent ? state.permanentAddress.district : state.presentAddress.district),
-      postCode: postCode ?? (isPermanent ? state.permanentAddress.postCode : state.presentAddress.postCode),
+    final currentAddress = isPermanent ? state.permanentAddress : state.presentAddress;
+
+    final newAddress = currentAddress.copyWith(
+      flatNo: flatNo,
+      roadNo: roadNo,
+      village: village,
+      postOffice: postOffice,
+      policeStation: policeStation,
+      district: district,
+      postCode: postCode,
     );
 
     state = state.copyWith(
-      permanentAddress: isPermanent ? newAddress : null,
-      presentAddress: !isPermanent ? newAddress : null,
+      permanentAddress: isPermanent ? newAddress : state.permanentAddress,
+      presentAddress: !isPermanent ? newAddress : state.presentAddress,
     );
   }
 
   void updateField(ApplicationForm updatedForm) {
       state = updatedForm;
+      _calculateRisk();
   }
 
   void updateNominee(int index, Nominee nominee) {
@@ -62,6 +71,15 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       nidFrontPath: nidFront,
       nidBackPath: nidBack,
       applicantPhotoPath: applicantPhoto,
+    );
+  }
+
+  void _calculateRisk() {
+    final score = RiskCalculator.calculateRiskScore(state);
+    final rating = RiskCalculator.getRiskRating(score);
+    state = state.copyWith(
+      riskScore: score,
+      riskRating: rating,
     );
   }
 }
