@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'steps/step1_identity.dart';
 import 'steps/step2_personal.dart';
+import 'steps/step2b_address.dart';
 import 'steps/step3_professional.dart';
 import 'steps/step4_nominee.dart';
 import 'steps/step5_tp.dart';
+import 'steps/step7_beneficial_owner.dart';
 import 'steps/step6_review.dart';
 
 // We will build the wrapper here
@@ -27,7 +29,7 @@ class _MainFormScreenState extends State<MainFormScreen> {
             height: 60,
             child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: 6,
+                itemCount: 8,
                 itemBuilder: (c, i) => Container(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                     child: Text(
@@ -49,6 +51,10 @@ class _MainFormScreenState extends State<MainFormScreen> {
                     onNext: () => setState(() => _currentStep++),
                     onBack: () => setState(() => _currentStep--),
                 ),
+                AddressStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
                 ProfessionalStep(
                     onNext: () => setState(() => _currentStep++),
                     onBack: () => setState(() => _currentStep--),
@@ -58,6 +64,10 @@ class _MainFormScreenState extends State<MainFormScreen> {
                     onBack: () => setState(() => _currentStep--),
                 ),
                 TransactionProfileStep(
+                    onNext: () => setState(() => _currentStep++),
+                    onBack: () => setState(() => _currentStep--),
+                ),
+                BeneficialOwnerStep(
                     onNext: () => setState(() => _currentStep++),
                     onBack: () => setState(() => _currentStep--),
                 ),

@@ -25,8 +25,11 @@ class PdfGeneratorService {
     // We would load all 11 images here in a real scenario
     // final bgPage2 = await loadImage('2.png'); ...
 
+    final bgPage2 = await loadImage('2.png');
+    final bgPage3 = await loadImage('3.png');
     final bgPage4 = await loadImage('4.png');
     final bgPage5 = await loadImage('5.png');
+    final bgPage8 = await loadImage('8.png');
 
     // Helper for Text Overlay
     pw.Widget positionedText(String text, double x, double y, {double size = 10, bool isBold = false}) {
@@ -99,14 +102,56 @@ class PdfGeneratorService {
       ),
     );
 
-    // --- PAGE 2 & 3: Backgrounds (Professional info usually on Page 1 or 3, simplified here) ---
-    for (int i = 2; i <= 3; i++) {
-       final bg = await loadImage('$i.png');
-       pdf.addPage(pw.Page(
-           pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
-           build: (c) => pw.FullPage(ignoreMargins: true, child: pw.Image(bg, fit: pw.BoxFit.fill))
-       ));
-    }
+    // --- PAGE 2: Address Information ---
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: pw.EdgeInsets.zero,
+        build: (pw.Context context) {
+          return pw.Stack(
+            children: [
+              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage2, fit: pw.BoxFit.fill)),
+
+              // Present Address
+              positionedText(form.presentAddress.flatNo + ", " + form.presentAddress.roadNo, 180, 100, size: 10),
+              positionedText(form.presentAddress.village, 180, 120, size: 10),
+              positionedText(form.presentAddress.postOffice + ", " + form.presentAddress.postCode, 180, 140, size: 10),
+              positionedText(form.presentAddress.policeStation + ", " + form.presentAddress.district, 180, 160, size: 10),
+
+              // Permanent Address (Approximated Y coordinates below Present)
+              positionedText(form.permanentAddress.flatNo + ", " + form.permanentAddress.roadNo, 180, 250, size: 10),
+              positionedText(form.permanentAddress.village, 180, 270, size: 10),
+              positionedText(form.permanentAddress.postOffice + ", " + form.permanentAddress.postCode, 180, 290, size: 10),
+              positionedText(form.permanentAddress.policeStation + ", " + form.permanentAddress.district, 180, 310, size: 10),
+            ],
+          );
+        },
+      ),
+    );
+
+    // --- PAGE 3: Professional & Introducer ---
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: pw.EdgeInsets.zero,
+        build: (pw.Context context) {
+          return pw.Stack(
+            children: [
+              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage3, fit: pw.BoxFit.fill)),
+
+              // Occupation
+              positionedText(form.occupation, 180, 100, size: 12),
+              // Monthly Income
+              positionedText(form.monthlyIncome, 180, 120, size: 12),
+
+              // Introducer Info
+              positionedText(form.introducerName, 180, 400, size: 12),
+              positionedText(form.introducerAccountNo, 180, 420, size: 12),
+            ],
+          );
+        },
+      ),
+    );
 
     // --- PAGE 4: Nominee Info ---
     pdf.addPage(
@@ -168,8 +213,37 @@ class PdfGeneratorService {
       ),
     );
 
-    // --- Pages 6-11: Office Use / Risk Grading (Backgrounds) ---
-    for (int i = 6; i <= 11; i++) {
+    // --- Pages 6 & 7: Office Use ---
+    for (int i = 6; i <= 7; i++) {
+        final bg = await loadImage('$i.png');
+        pdf.addPage(pw.Page(
+            pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
+            build: (c) => pw.FullPage(ignoreMargins: true, child: pw.Image(bg, fit: pw.BoxFit.fill)),
+        ));
+    }
+
+    // --- PAGE 8: Beneficial Owner ---
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: pw.EdgeInsets.zero,
+        build: (pw.Context context) {
+          return pw.Stack(
+            children: [
+              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage8, fit: pw.BoxFit.fill)),
+
+              positionedText(form.beneficialOwnerName, 180, 150, size: 12),
+              positionedText(form.beneficialOwnerRelation, 180, 170, size: 12),
+              positionedText(form.beneficialOwnerDob, 400, 170, size: 12),
+              positionedText(form.beneficialOwnerNid, 180, 190, size: 12),
+            ],
+          );
+        },
+      ),
+    );
+
+    // --- Pages 9-11: Risk & Terms ---
+    for (int i = 9; i <= 11; i++) {
         final bg = await loadImage('$i.png');
         pdf.addPage(pw.Page(
             pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,

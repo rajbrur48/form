@@ -45,6 +45,12 @@ class ApplicationForm {
   String? nidFrontPath;
   String? nidBackPath;
 
+  // --- Beneficial Owner (Page 8) ---
+  String beneficialOwnerName;
+  String beneficialOwnerRelation;
+  String beneficialOwnerDob;
+  String beneficialOwnerNid;
+
   // --- Office Use / Risk Grading (Page 6-9) ---
   // These might be calculated or left blank, but we need structure
   String riskGradingScore;
@@ -81,6 +87,10 @@ class ApplicationForm {
     this.applicantSignaturePath,
     this.nidFrontPath,
     this.nidBackPath,
+    this.beneficialOwnerName = '',
+    this.beneficialOwnerRelation = '',
+    this.beneficialOwnerDob = '',
+    this.beneficialOwnerNid = '',
     this.riskGradingScore = '',
     this.riskGradingComments = '',
   });
@@ -126,6 +136,10 @@ class ApplicationForm {
     String? applicantSignaturePath,
     String? nidFrontPath,
     String? nidBackPath,
+    String? beneficialOwnerName,
+    String? beneficialOwnerRelation,
+    String? beneficialOwnerDob,
+    String? beneficialOwnerNid,
   }) {
     return ApplicationForm(
       accountType: accountType ?? this.accountType,
@@ -158,6 +172,10 @@ class ApplicationForm {
       applicantSignaturePath: applicantSignaturePath ?? this.applicantSignaturePath,
       nidFrontPath: nidFrontPath ?? this.nidFrontPath,
       nidBackPath: nidBackPath ?? this.nidBackPath,
+      beneficialOwnerName: beneficialOwnerName ?? this.beneficialOwnerName,
+      beneficialOwnerRelation: beneficialOwnerRelation ?? this.beneficialOwnerRelation,
+      beneficialOwnerDob: beneficialOwnerDob ?? this.beneficialOwnerDob,
+      beneficialOwnerNid: beneficialOwnerNid ?? this.beneficialOwnerNid,
     );
   }
 }
