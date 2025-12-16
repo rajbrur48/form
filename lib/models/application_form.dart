@@ -4,6 +4,7 @@ class ApplicationForm {
   String accountType; // Savings, Current, etc.
   String currency; // BDT, USD, etc.
   String operationMode; // Singly, Jointly
+  String initialDeposit; // Figures
 
   String applicantNameBangla;
   String applicantNameEnglish;
@@ -61,6 +62,7 @@ class ApplicationForm {
     this.accountType = 'Savings',
     this.currency = 'BDT',
     this.operationMode = 'Singly',
+    this.initialDeposit = '',
     this.applicantNameBangla = '',
     this.applicantNameEnglish = '',
     this.fatherName = '',
@@ -111,6 +113,7 @@ class ApplicationForm {
     String? accountType,
     String? currency,
     String? operationMode,
+    String? initialDeposit,
     String? applicantNameBangla,
     String? applicantNameEnglish,
     String? fatherName,
@@ -150,6 +153,7 @@ class ApplicationForm {
       accountType: accountType ?? this.accountType,
       currency: currency ?? this.currency,
       operationMode: operationMode ?? this.operationMode,
+      initialDeposit: initialDeposit ?? this.initialDeposit,
       applicantNameBangla: applicantNameBangla ?? this.applicantNameBangla,
       applicantNameEnglish: applicantNameEnglish ?? this.applicantNameEnglish,
       fatherName: fatherName ?? this.fatherName,

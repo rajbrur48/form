@@ -118,6 +118,30 @@ class TransactionProfileStep extends ConsumerWidget {
                ),
              ),
 
+          SectionCard(
+            title: "প্রাথমিক জমা",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  initialValue: form.initialDeposit,
+                  decoration: InputDecoration(labelText: "জমার পরিমাণ (টাকা)"),
+                  keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  onChanged: (v) => notifier.updateField(form.copyWith(initialDeposit: v)),
+                ),
+                if (form.initialDeposit.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, left: 4),
+                    child: Text(
+                      BanglaAmountConverter.convert(double.tryParse(form.initialDeposit) ?? 0),
+                      style: TextStyle(color: Colors.green.shade700, fontStyle: FontStyle.italic),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
           StepNavigationButtons(
             onBack: onBack,
             onNext: onNext,
