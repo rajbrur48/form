@@ -10,83 +10,89 @@ class AddressStep extends ConsumerWidget {
   const AddressStep({Key? key, required this.onNext, required this.onBack}) : super(key: key);
 
   Widget _buildAddressForm(BuildContext context, String title, Address address, Function(Address) onUpdate) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        SizedBox(height: 8),
-        TextFormField(
-          initialValue: address.flatNo,
-          decoration: InputDecoration(labelText: "Flat/House No", border: OutlineInputBorder()),
-          onChanged: (v) => onUpdate(Address(
-              flatNo: v, roadNo: address.roadNo, village: address.village,
-              postOffice: address.postOffice, postCode: address.postCode,
-              policeStation: address.policeStation, district: address.district
-          )),
-        ),
-        SizedBox(height: 8),
-        TextFormField(
-          initialValue: address.roadNo,
-          decoration: InputDecoration(labelText: "Road/Block/Sector", border: OutlineInputBorder()),
-          onChanged: (v) => onUpdate(Address(
-              flatNo: address.flatNo, roadNo: v, village: address.village,
-              postOffice: address.postOffice, postCode: address.postCode,
-              policeStation: address.policeStation, district: address.district
-          )),
-        ),
-        SizedBox(height: 8),
-        TextFormField(
-          initialValue: address.village,
-          decoration: InputDecoration(labelText: "Village/Area", border: OutlineInputBorder()),
-          onChanged: (v) => onUpdate(Address(
-              flatNo: address.flatNo, roadNo: address.roadNo, village: v,
-              postOffice: address.postOffice, postCode: address.postCode,
-              policeStation: address.policeStation, district: address.district
-          )),
-        ),
-        SizedBox(height: 8),
-        Row(children: [
-           Expanded(child: TextFormField(
-              initialValue: address.postOffice,
-              decoration: InputDecoration(labelText: "Post Office", border: OutlineInputBorder()),
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            Divider(),
+            SizedBox(height: 8),
+            TextFormField(
+              initialValue: address.flatNo,
+              decoration: InputDecoration(labelText: "ফ্ল্যাট / বাড়ি নং"),
               onChanged: (v) => onUpdate(Address(
-                  flatNo: address.flatNo, roadNo: address.roadNo, village: address.village,
-                  postOffice: v, postCode: address.postCode,
+                  flatNo: v, roadNo: address.roadNo, village: address.village,
+                  postOffice: address.postOffice, postCode: address.postCode,
                   policeStation: address.policeStation, district: address.district
               )),
-           )),
-           SizedBox(width: 8),
-           Expanded(child: TextFormField(
-              initialValue: address.postCode,
-              decoration: InputDecoration(labelText: "Post Code", border: OutlineInputBorder()),
+            ),
+            SizedBox(height: 8),
+            TextFormField(
+              initialValue: address.roadNo,
+              decoration: InputDecoration(labelText: "রাস্তা / ব্লক / সেক্টর"),
               onChanged: (v) => onUpdate(Address(
-                  flatNo: address.flatNo, roadNo: address.roadNo, village: address.village,
-                  postOffice: address.postOffice, postCode: v,
+                  flatNo: address.flatNo, roadNo: v, village: address.village,
+                  postOffice: address.postOffice, postCode: address.postCode,
                   policeStation: address.policeStation, district: address.district
               )),
-           )),
-        ]),
-        SizedBox(height: 8),
-        TextFormField(
-          initialValue: address.policeStation,
-          decoration: InputDecoration(labelText: "Thana/Police Station", border: OutlineInputBorder()),
-          onChanged: (v) => onUpdate(Address(
-              flatNo: address.flatNo, roadNo: address.roadNo, village: address.village,
-              postOffice: address.postOffice, postCode: address.postCode,
-              policeStation: v, district: address.district
-          )),
+            ),
+            SizedBox(height: 8),
+            TextFormField(
+              initialValue: address.village,
+              decoration: InputDecoration(labelText: "গ্রাম / এলাকা"),
+              onChanged: (v) => onUpdate(Address(
+                  flatNo: address.flatNo, roadNo: address.roadNo, village: v,
+                  postOffice: address.postOffice, postCode: address.postCode,
+                  policeStation: address.policeStation, district: address.district
+              )),
+            ),
+            SizedBox(height: 8),
+            Row(children: [
+               Expanded(child: TextFormField(
+                  initialValue: address.postOffice,
+                  decoration: InputDecoration(labelText: "ডাকঘর"),
+                  onChanged: (v) => onUpdate(Address(
+                      flatNo: address.flatNo, roadNo: address.roadNo, village: address.village,
+                      postOffice: v, postCode: address.postCode,
+                      policeStation: address.policeStation, district: address.district
+                  )),
+               )),
+               SizedBox(width: 8),
+               Expanded(child: TextFormField(
+                  initialValue: address.postCode,
+                  decoration: InputDecoration(labelText: "পোস্ট কোড"),
+                  onChanged: (v) => onUpdate(Address(
+                      flatNo: address.flatNo, roadNo: address.roadNo, village: address.village,
+                      postOffice: address.postOffice, postCode: v,
+                      policeStation: address.policeStation, district: address.district
+                  )),
+               )),
+            ]),
+            SizedBox(height: 8),
+            TextFormField(
+              initialValue: address.policeStation,
+              decoration: InputDecoration(labelText: "থানা"),
+              onChanged: (v) => onUpdate(Address(
+                  flatNo: address.flatNo, roadNo: address.roadNo, village: address.village,
+                  postOffice: address.postOffice, postCode: address.postCode,
+                  policeStation: v, district: address.district
+              )),
+            ),
+            SizedBox(height: 8),
+            TextFormField(
+              initialValue: address.district,
+              decoration: InputDecoration(labelText: "জেলা"),
+              onChanged: (v) => onUpdate(Address(
+                  flatNo: address.flatNo, roadNo: address.roadNo, village: address.village,
+                  postOffice: address.postOffice, postCode: address.postCode,
+                  policeStation: address.policeStation, district: v
+              )),
+            ),
+          ],
         ),
-        SizedBox(height: 8),
-        TextFormField(
-          initialValue: address.district,
-          decoration: InputDecoration(labelText: "District", border: OutlineInputBorder()),
-          onChanged: (v) => onUpdate(Address(
-              flatNo: address.flatNo, roadNo: address.roadNo, village: address.village,
-              postOffice: address.postOffice, postCode: address.postCode,
-              policeStation: address.policeStation, district: v
-          )),
-        ),
-      ],
+      ),
     );
   }
 
@@ -100,16 +106,16 @@ class AddressStep extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("Address Details", style: Theme.of(context).textTheme.headlineSmall),
+          Text("ঠিকানা সংক্রান্ত তথ্য", style: Theme.of(context).textTheme.headlineSmall),
           SizedBox(height: 20),
 
-          _buildAddressForm(context, "Present Address", form.presentAddress, (addr) {
+          _buildAddressForm(context, "বর্তমান ঠিকানা", form.presentAddress, (addr) {
               notifier.updateField(form.copyWith(presentAddress: addr));
           }),
 
-          SizedBox(height: 30),
+          SizedBox(height: 20),
 
-          _buildAddressForm(context, "Permanent Address", form.permanentAddress, (addr) {
+          _buildAddressForm(context, "স্থায়ী ঠিকানা", form.permanentAddress, (addr) {
               notifier.updateField(form.copyWith(permanentAddress: addr));
           }),
 
@@ -117,8 +123,8 @@ class AddressStep extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-                ElevatedButton(onPressed: onBack, child: Text("Back")),
-                ElevatedButton(onPressed: onNext, child: Text("Next")),
+                OutlinedButton(onPressed: onBack, child: Text("পেছনে")),
+                ElevatedButton(onPressed: onNext, child: Text("পরবর্তী")),
             ],
           )
         ],

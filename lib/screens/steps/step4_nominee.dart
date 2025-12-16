@@ -40,12 +40,12 @@ class NomineeStep extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("Nominee Information", style: Theme.of(context).textTheme.headlineSmall),
+          Text("নমিনির তথ্য", style: Theme.of(context).textTheme.headlineSmall),
           SizedBox(height: 10),
 
           TextFormField(
             initialValue: nominee.name,
-            decoration: InputDecoration(labelText: "Nominee Name", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "নমিনির নাম"),
             onChanged: (v) => _updateNominee(Nominee(
                 name: v, relation: nominee.relation, dob: nominee.dob, nidNumber: nominee.nidNumber,
                 photoPath: nominee.photoPath, signaturePath: nominee.signaturePath
@@ -54,7 +54,7 @@ class NomineeStep extends ConsumerWidget {
           SizedBox(height: 10),
           TextFormField(
             initialValue: nominee.relation,
-            decoration: InputDecoration(labelText: "Relation", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "সম্পর্ক"),
             onChanged: (v) => _updateNominee(Nominee(
                 name: nominee.name, relation: v, dob: nominee.dob, nidNumber: nominee.nidNumber,
                 photoPath: nominee.photoPath, signaturePath: nominee.signaturePath
@@ -63,7 +63,7 @@ class NomineeStep extends ConsumerWidget {
           SizedBox(height: 10),
           TextFormField(
             initialValue: nominee.dob,
-            decoration: InputDecoration(labelText: "Date of Birth", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "জন্ম তারিখ", hintText: "DD/MM/YYYY"),
             onChanged: (v) => _updateNominee(Nominee(
                 name: nominee.name, relation: nominee.relation, dob: v, nidNumber: nominee.nidNumber,
                 photoPath: nominee.photoPath, signaturePath: nominee.signaturePath
@@ -72,7 +72,7 @@ class NomineeStep extends ConsumerWidget {
            SizedBox(height: 10),
           TextFormField(
             initialValue: nominee.nidNumber,
-            decoration: InputDecoration(labelText: "Nominee NID", border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: "জাতীয় পরিচয়পত্র নম্বর"),
             onChanged: (v) => _updateNominee(Nominee(
                 name: nominee.name, relation: nominee.relation, dob: nominee.dob, nidNumber: v,
                 photoPath: nominee.photoPath, signaturePath: nominee.signaturePath
@@ -84,10 +84,17 @@ class NomineeStep extends ConsumerWidget {
               onTap: _takePhoto,
               child: Container(
                   height: 150,
-                  decoration: BoxDecoration(border: Border.all(), color: Colors.grey[200]),
+                  decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.grey[100]
+                  ),
                   child: nominee.photoPath.isNotEmpty
-                    ? Image.file(File(nominee.photoPath), fit: BoxFit.cover)
-                    : Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.camera_alt), Text("Tap to take Nominee Photo")]),
+                    ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(File(nominee.photoPath), fit: BoxFit.cover))
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [Icon(Icons.camera_alt, size: 40, color: Colors.grey), Text("নমিনির ছবি তুলুন")]
+                      ),
               ),
           ),
 
@@ -95,8 +102,8 @@ class NomineeStep extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-                ElevatedButton(onPressed: onBack, child: Text("Back")),
-                ElevatedButton(onPressed: onNext, child: Text("Next")),
+                OutlinedButton(onPressed: onBack, child: Text("পেছনে")),
+                ElevatedButton(onPressed: onNext, child: Text("পরবর্তী")),
             ],
           )
         ],
