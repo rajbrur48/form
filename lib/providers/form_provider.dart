@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/application_form.dart';
+import '../utils/mock_data.dart';
 
 class FormNotifier extends StateNotifier<ApplicationForm> {
   FormNotifier() : super(ApplicationForm.empty());

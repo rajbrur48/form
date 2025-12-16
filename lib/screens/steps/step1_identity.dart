@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/form_provider.dart';
 import '../../models/application_form.dart';
 import '../../services/nid_ocr_service.dart';
+import '../../utils/mock_data.dart';
 import '../camera_screen.dart';
 import 'dart:io';
 
@@ -81,7 +82,19 @@ class IdentityVerificationStep extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text("Identity Verification", style: Theme.of(context).textTheme.headlineSmall),
-          SizedBox(height: 20),
+          SizedBox(height: 10),
+          Center(
+            child: ElevatedButton.icon(
+              icon: Icon(Icons.flash_on),
+              label: Text("Auto-Fill (Demo Data)"),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+              onPressed: () {
+                ref.read(formProvider.notifier).updateField(MockData.getCompleteMockForm());
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Mock Data Filled!")));
+              },
+            ),
+          ),
+          SizedBox(height: 10),
 
           _buildImageCard(
               "NID Front",
@@ -103,7 +116,8 @@ class IdentityVerificationStep extends ConsumerWidget {
 
           SizedBox(height: 20),
           ElevatedButton(
-            onPressed: (form.nidFrontPath != null && form.applicantPhotoPath != null) ? onNext : null,
+            // Allow next if mock data filled (check name) OR images present
+            onPressed: (form.applicantNameBangla.isNotEmpty || (form.nidFrontPath != null && form.applicantPhotoPath != null)) ? onNext : null,
             child: Text("Next"),
           ),
         ],
