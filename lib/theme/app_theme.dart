@@ -5,29 +5,34 @@ class AppTheme {
   static const Color secondaryColor = Color(0xFFC41E3A); // Red accent
   static const Color accentColor = Color(0xFFD4AF37); // Gold
   static const Color backgroundColor = Color(0xFFF5F7FA);
+  static const Color surfaceColor = Colors.white;
 
   static ThemeData get lightTheme {
     return ThemeData(
-      primaryColor: primaryColor,
-      scaffoldBackgroundColor: backgroundColor,
-      colorScheme: ColorScheme.fromSwatch().copyWith(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primaryColor,
         primary: primaryColor,
         secondary: secondaryColor,
+        background: backgroundColor,
+        surface: surfaceColor,
       ),
-      fontFamily: 'NotoSansBengali', // Use the Bangla font for UI too if loaded, or system default
+      scaffoldBackgroundColor: backgroundColor,
+      fontFamily: 'NotoSansBengali',
 
       // Card Theme
       cardTheme: CardTheme(
-        elevation: 4,
+        elevation: 0, // Flat by default, outline or soft shadow handled manually if needed
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        margin: EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        color: Colors.white,
+        color: surfaceColor,
+        margin: EdgeInsets.zero, // We will handle margins in layout
       ),
 
       // Input Decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
+        alignLabelWithHint: true,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -40,8 +45,13 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: primaryColor, width: 2),
         ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.red.shade400),
+        ),
         labelStyle: TextStyle(color: Colors.grey.shade700),
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
 
       // Button Theme
@@ -49,9 +59,18 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 2,
+          elevation: 0,
+          textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primaryColor,
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          side: BorderSide(color: primaryColor),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),
@@ -59,7 +78,7 @@ class AppTheme {
       // Text Theme
       textTheme: TextTheme(
         headlineSmall: TextStyle(
-          color: primaryColor,
+          color: Colors.black87,
           fontWeight: FontWeight.bold,
           fontSize: 24,
         ),
@@ -68,6 +87,10 @@ class AppTheme {
           fontWeight: FontWeight.w600,
           fontSize: 18,
         ),
+        bodyMedium: TextStyle(
+          color: Colors.black87,
+          fontSize: 14,
+        ),
       ),
 
       appBarTheme: AppBarTheme(
@@ -75,6 +98,7 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        scrolledUnderElevation: 0,
       ),
     );
   }

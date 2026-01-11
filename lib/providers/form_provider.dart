@@ -1,9 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/application_form.dart';
 import '../utils/mock_data.dart';
+import '../utils/risk_calculator.dart';
+import '../utils/local_storage_service.dart';
 
 class FormNotifier extends StateNotifier<ApplicationForm> {
-  FormNotifier() : super(ApplicationForm.empty());
+  final LocalStorageService _storageService = LocalStorageService();
+
+  FormNotifier() : super(ApplicationForm.empty()) {
+    _loadSavedForm();
+  }
+
+  Future<void> _loadSavedForm() async {
+    final savedForm = await _storageService.loadForm();
+    if (savedForm != null) {
+      state = savedForm;
+    }
+  }
+
+  Future<void> _saveState() async {
+    await _storageService.saveForm(state);
+  }
 
   void updatePersonalDetails({
     String? nameBangla,
@@ -21,32 +38,43 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       dob: dob,
       nidNumber: nid,
     );
+    _calculateRisk();
+    _saveState();
   }
 
   void updateAddress({
     required bool isPermanent,
+    String? flatNo,
+    String? roadNo,
     String? village,
     String? postOffice,
     String? policeStation,
     String? district,
     String? postCode,
   }) {
-    final newAddress = Address(
-      village: village ?? (isPermanent ? state.permanentAddress.village : state.presentAddress.village),
-      postOffice: postOffice ?? (isPermanent ? state.permanentAddress.postOffice : state.presentAddress.postOffice),
-      policeStation: policeStation ?? (isPermanent ? state.permanentAddress.policeStation : state.presentAddress.policeStation),
-      district: district ?? (isPermanent ? state.permanentAddress.district : state.presentAddress.district),
-      postCode: postCode ?? (isPermanent ? state.permanentAddress.postCode : state.presentAddress.postCode),
+    final currentAddress = isPermanent ? state.permanentAddress : state.presentAddress;
+
+    final newAddress = currentAddress.copyWith(
+      flatNo: flatNo,
+      roadNo: roadNo,
+      village: village,
+      postOffice: postOffice,
+      policeStation: policeStation,
+      district: district,
+      postCode: postCode,
     );
 
     state = state.copyWith(
-      permanentAddress: isPermanent ? newAddress : null,
-      presentAddress: !isPermanent ? newAddress : null,
+      permanentAddress: isPermanent ? newAddress : state.permanentAddress,
+      presentAddress: !isPermanent ? newAddress : state.presentAddress,
     );
+    _saveState();
   }
 
   void updateField(ApplicationForm updatedForm) {
       state = updatedForm;
+      _calculateRisk();
+      _saveState();
   }
 
   void updateNominee(int index, Nominee nominee) {
@@ -54,6 +82,7 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       if (index < newNominees.length) {
           newNominees[index] = nominee;
           state = state.copyWith(nominees: newNominees);
+          _saveState();
       }
   }
 
@@ -62,6 +91,16 @@ class FormNotifier extends StateNotifier<ApplicationForm> {
       nidFrontPath: nidFront,
       nidBackPath: nidBack,
       applicantPhotoPath: applicantPhoto,
+    );
+    _saveState();
+  }
+
+  void _calculateRisk() {
+    final score = RiskCalculator.calculateRiskScore(state);
+    final rating = RiskCalculator.getRiskRating(score);
+    state = state.copyWith(
+      riskScore: score,
+      riskRating: rating,
     );
   }
 }

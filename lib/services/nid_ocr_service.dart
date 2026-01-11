@@ -1,6 +1,7 @@
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../models/application_form.dart'; // For Address model
 
 class NidOcrService {
   // Bengali might not be explicitly supported in the enum for this version, falling back to default (Latin) which captures NID No, English Name, DOB.
@@ -34,11 +35,90 @@ class NidOcrService {
     );
   }
 
-  Future<String> processNidBack(File imageFile) async {
+  Future<Address> processNidBack(File imageFile) async {
     final inputImage = InputImage.fromFile(imageFile);
     final RecognizedText recognizedText = await _textRecognizer.processImage(inputImage);
-    // Usually the address is the biggest block of Bangla text on the back
-    return recognizedText.text;
+    String text = recognizedText.text;
+    print("OCR Back Text: $text");
+
+    // Parse using the granular logic
+    return _parseAddress(text);
+  }
+
+  Address _parseAddress(String text) {
+    // Expected structure based on NID.jpg:
+    // ঠিকানা: বাসা/হোল্ডিং: <val>, গ্রাম/রাস্তা: <val>, ডাকঘর: <val> - <code >, <thana>, <dist/muni>, <dist>
+
+    // Normalize text (remove newlines, extra spaces)
+    String cleanText = text.replaceAll('\n', ' ').replaceAll(RegExp(r'\s+'), ' ');
+
+    String house = '';
+    String village = '';
+    String postOffice = '';
+    String postCode = '';
+    String thana = '';
+    String district = '';
+
+    // Extract House/Holding
+    // "বাসা/হোল্ডিং:"
+    RegExp houseExp = RegExp(r'বাসা/হোল্ডিং:\s*(.*?),?\s*গ্রাম/রাস্তা:');
+    var houseMatch = houseExp.firstMatch(cleanText);
+    if (houseMatch != null) {
+      house = houseMatch.group(1)!.trim();
+    }
+
+    // Extract Village/Road
+    // "গ্রাম/রাস্তা:" until "ডাকঘর:"
+    RegExp villageExp = RegExp(r'গ্রাম/রাস্তা:\s*(.*?),?\s*ডাকঘর:');
+    var villageMatch = villageExp.firstMatch(cleanText);
+    if (villageMatch != null) {
+      village = villageMatch.group(1)!.trim();
+    }
+
+    // Extract Post Office and Code
+    // "ডাকঘর:" until "-" or digit
+    // Usually: "ডাকঘর: লালমনিরহাট সদর - ৫৫০০"
+    RegExp poExp = RegExp(r'ডাকঘর:\s*(.*?)\s*-\s*(\d+|[০-৯]+)');
+    var poMatch = poExp.firstMatch(cleanText);
+    if (poMatch != null) {
+      postOffice = poMatch.group(1)!.trim();
+      postCode = poMatch.group(2)!.trim();
+
+      // Try to find Thana and District which usually follow the postcode
+      // The text after postcode is often comma separated: "..., Lalmonirhat Sadar, Lalmonirhat Pourashava, Lalmonirhat"
+      // We need to look at the text *after* the postcode match.
+      int endOfMatch = poMatch.end;
+      if (endOfMatch < cleanText.length) {
+        String remaining = cleanText.substring(endOfMatch).trim();
+        // Remove leading comma if any
+        if (remaining.startsWith(',')) remaining = remaining.substring(1).trim();
+
+        List<String> parts = remaining.split(',');
+        if (parts.isNotEmpty) {
+            thana = parts[0].trim();
+            if (parts.length > 1) {
+                // If there are more parts, the last one is usually District, others might be Municipality
+                district = parts.last.trim();
+            } else {
+                // If only one part, it might be district if thana was already covered,
+                // but usually the sequence is Thana, District.
+                // Let's assume the first part after PO is Thana.
+            }
+        }
+      }
+    } else {
+        // Fallback: simple split if regex fails
+    }
+
+    return Address(
+        flatNo: house,
+        roadNo: '', // NID doesn't always distinguish road number from village/road field
+        village: village,
+        postOffice: postOffice,
+        postCode: postCode,
+        policeStation: thana,
+        district: district,
+    );
   }
 
   String _findLineAfter(String text, List<String> keywords) {

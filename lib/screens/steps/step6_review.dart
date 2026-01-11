@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:printing/printing.dart';
 import '../../providers/form_provider.dart';
 import '../../services/pdf_generator_service.dart';
+import '../components/form_components.dart';
+import '../../utils/bangla_amount_converter.dart';
 
 class ReviewStep extends ConsumerStatefulWidget {
   @override
@@ -14,21 +16,25 @@ class ReviewStep extends ConsumerStatefulWidget {
 class _ReviewStepState extends ConsumerState<ReviewStep> {
   final ImagePicker _picker = ImagePicker();
   bool _showPdf = false;
-  bool _isGenerating = false;
 
   Future<void> _takeSignature() async {
     final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
     if (photo != null) {
       final form = ref.read(formProvider);
-      ref.read(formProvider.notifier).updateField(form.copyWith(applicantSignaturePath: photo.path));
+      ref
+          .read(formProvider.notifier)
+          .updateField(form.copyWith(applicantSignaturePath: photo.path));
     }
   }
 
   void _generatePdf() async {
     final form = ref.read(formProvider);
-    if (form.applicantSignaturePath == null || form.applicantSignaturePath!.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("অনুগ্রহ করে স্বাক্ষর প্রদান করুন (Please provide signature)")));
-        return;
+    if (form.applicantSignaturePath == null ||
+        form.applicantSignaturePath!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              "অনুগ্রহ করে স্বাক্ষর প্রদান করুন (Please provide signature)")));
+      return;
     }
     setState(() {
       _showPdf = true;
@@ -37,12 +43,19 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
 
   Widget _buildReviewRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 120, child: Text("$label:", style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold))),
-          Expanded(child: Text(value, style: TextStyle(fontWeight: FontWeight.w500))),
+          SizedBox(
+              width: 130,
+              child: Text("$label",
+                  style: TextStyle(
+                      color: Colors.grey[600], fontWeight: FontWeight.w500))),
+          Expanded(
+              child: Text(value,
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600, color: Colors.black87))),
         ],
       ),
     );
@@ -55,11 +68,18 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
     if (_showPdf) {
       return Column(
         children: [
-          Row(
-            children: [
-               IconButton(icon: Icon(Icons.arrow_back), onPressed: () => setState(() => _showPdf = false)),
-               Text("পিডিএফ প্রিভিউ", style: Theme.of(context).textTheme.titleLarge),
-            ],
+          Container(
+            color: Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              children: [
+                IconButton(
+                    icon: Icon(Icons.arrow_back),
+                    onPressed: () => setState(() => _showPdf = false)),
+                Text("পিডিএফ প্রিভিউ",
+                    style: Theme.of(context).textTheme.titleLarge),
+              ],
+            ),
           ),
           Expanded(
             child: PdfPreview(
@@ -68,6 +88,7 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
               allowSharing: true,
               canChangeOrientation: false,
               canChangePageFormat: false,
+              loadingWidget: Center(child: CircularProgressIndicator()),
             ),
           ),
         ],
@@ -80,59 +101,118 @@ class _ReviewStepState extends ConsumerState<ReviewStep> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("আবেদন পর্যালোচনা", style: Theme.of(context).textTheme.headlineSmall),
-          SizedBox(height: 20),
-
-          Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)]),
+          SectionCard(
+            title: "তথ্য পর্যালোচনা",
             child: Column(
-                children: [
-                    _buildReviewRow("নাম (ইংরেজি)", form.applicantNameEnglish),
-                    _buildReviewRow("নাম (বাংলা)", form.applicantNameBangla),
-                    _buildReviewRow("মোবাইল", form.mobileNumber),
-                    _buildReviewRow("এনআইডি", form.nidNumber),
-                    _buildReviewRow("হিসাবের ধরন", form.accountType),
-                    _buildReviewRow("পেশা", form.occupation),
-                ]
+              children: [
+                _buildReviewRow("নাম (ইংরেজি)", form.applicantNameEnglish),
+                Divider(),
+                _buildReviewRow("নাম (বাংলা)", form.applicantNameBangla),
+                Divider(),
+                _buildReviewRow("মোবাইল", form.mobileNumber),
+                Divider(),
+                _buildReviewRow("এনআইডি", form.nidNumber),
+                Divider(),
+                _buildReviewRow("হিসাবের ধরন", form.accountType),
+                Divider(),
+                _buildReviewRow("পেশা", form.occupation),
+                Divider(),
+                _buildReviewRow("প্রাথমিক জমা", "${form.initialDeposit} টাকা"),
+              ],
             ),
           ),
 
-          SizedBox(height: 20),
-          Text("স্বাক্ষর", style: Theme.of(context).textTheme.titleMedium),
-          SizedBox(height: 10),
-          GestureDetector(
-            onTap: _takeSignature,
-            child: Container(
+          SectionCard(
+            title: "ঝুঁকি বিশ্লেষণ (Risk Assessment)",
+            child: Column(
+              children: [
+                 _buildReviewRow("ঝুঁকি স্কোর (Score)", form.riskScore.toString()),
+                 Divider(),
+                 Row(
+                   children: [
+                     Text("ঝুঁকি রেটিং (Rating): ", style: TextStyle(fontWeight: FontWeight.w500)),
+                     SizedBox(width: 10),
+                     Container(
+                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                       decoration: BoxDecoration(
+                         color: form.riskRating == 'High' ? Colors.red.shade100 : Colors.green.shade100,
+                         borderRadius: BorderRadius.circular(20),
+                         border: Border.all(color: form.riskRating == 'High' ? Colors.red : Colors.green),
+                       ),
+                       child: Text(
+                         form.riskRating,
+                         style: TextStyle(
+                           color: form.riskRating == 'High' ? Colors.red.shade900 : Colors.green.shade900,
+                           fontWeight: FontWeight.bold,
+                         ),
+                       ),
+                     ),
+                   ],
+                 )
+              ],
+            ),
+          ),
+
+          SectionCard(
+            title: "ঠিকানা যাচাই (Address Verification)",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("বর্তমান ঠিকানা:", style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                Text(form.presentAddress.fullAddress, style: TextStyle(fontWeight: FontWeight.w600)),
+                SizedBox(height: 10),
+                Divider(),
+                Text("স্থায়ী ঠিকানা (NID অনুযায়ী):", style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+                Text(form.permanentAddress.fullAddress, style: TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+
+          SectionCard(
+            title: "আবেদনকারীর স্বাক্ষর",
+            child: InkWell(
+              onTap: _takeSignature,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
                 height: 150,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(12),
-                    color: Colors.grey[100]
-                ),
-                child: (form.applicantSignaturePath != null && form.applicantSignaturePath!.isNotEmpty)
-                  ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(File(form.applicantSignaturePath!), fit: BoxFit.contain))
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                          Icon(Icons.edit, size: 40, color: Colors.grey),
-                          Text("স্বাক্ষর দিতে এখানে ট্যাপ করুন"),
-                      ]
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: (form.applicantSignaturePath != null &&
+                            form.applicantSignaturePath!.isNotEmpty)
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey.shade300,
+                    width: 1,
                   ),
+                ),
+                child: (form.applicantSignaturePath != null &&
+                        form.applicantSignaturePath!.isNotEmpty)
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.file(File(form.applicantSignaturePath!),
+                            fit: BoxFit.contain))
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.edit_note,
+                              size: 40, color: Theme.of(context).primaryColor),
+                          SizedBox(height: 8),
+                          Text("স্বাক্ষর দিতে এখানে ট্যাপ করুন",
+                              style: TextStyle(color: Colors.grey.shade600)),
+                        ],
+                      ),
+              ),
             ),
           ),
-
-          SizedBox(height: 30),
-          ElevatedButton(
+          SizedBox(height: 16),
+          ElevatedButton.icon(
             onPressed: _generatePdf,
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                padding: EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
-            ),
-            child: Text("পিডিএফ তৈরি ও ডাউনলোড করুন", style: TextStyle(fontSize: 16, color: Colors.white)),
+            icon: Icon(Icons.picture_as_pdf),
+            label: Text("পিডিএফ তৈরি ও ডাউনলোড করুন"),
           ),
+          SizedBox(height: 30),
         ],
       ),
     );

@@ -4,6 +4,7 @@ class ApplicationForm {
   String accountType; // Savings, Current, etc.
   String currency; // BDT, USD, etc.
   String operationMode; // Singly, Jointly
+  String initialDeposit; // Figures
 
   String applicantNameBangla;
   String applicantNameEnglish;
@@ -52,14 +53,15 @@ class ApplicationForm {
   String beneficialOwnerNid;
 
   // --- Office Use / Risk Grading (Page 6-9) ---
-  // These might be calculated or left blank, but we need structure
-  String riskGradingScore;
+  int riskScore;
+  String riskRating; // High/Low
   String riskGradingComments;
 
   ApplicationForm({
     this.accountType = 'Savings',
     this.currency = 'BDT',
     this.operationMode = 'Singly',
+    this.initialDeposit = '',
     this.applicantNameBangla = '',
     this.applicantNameEnglish = '',
     this.fatherName = '',
@@ -91,11 +93,11 @@ class ApplicationForm {
     this.beneficialOwnerRelation = '',
     this.beneficialOwnerDob = '',
     this.beneficialOwnerNid = '',
-    this.riskGradingScore = '',
+    this.riskScore = 0,
+    this.riskRating = 'Low',
     this.riskGradingComments = '',
   });
 
-  // Factory for empty form
   factory ApplicationForm.empty() {
     return ApplicationForm(
       presentAddress: Address.empty(),
@@ -109,6 +111,7 @@ class ApplicationForm {
     String? accountType,
     String? currency,
     String? operationMode,
+    String? initialDeposit,
     String? applicantNameBangla,
     String? applicantNameEnglish,
     String? fatherName,
@@ -140,11 +143,15 @@ class ApplicationForm {
     String? beneficialOwnerRelation,
     String? beneficialOwnerDob,
     String? beneficialOwnerNid,
+    int? riskScore,
+    String? riskRating,
+    String? riskGradingComments,
   }) {
     return ApplicationForm(
       accountType: accountType ?? this.accountType,
       currency: currency ?? this.currency,
       operationMode: operationMode ?? this.operationMode,
+      initialDeposit: initialDeposit ?? this.initialDeposit,
       applicantNameBangla: applicantNameBangla ?? this.applicantNameBangla,
       applicantNameEnglish: applicantNameEnglish ?? this.applicantNameEnglish,
       fatherName: fatherName ?? this.fatherName,
@@ -176,17 +183,106 @@ class ApplicationForm {
       beneficialOwnerRelation: beneficialOwnerRelation ?? this.beneficialOwnerRelation,
       beneficialOwnerDob: beneficialOwnerDob ?? this.beneficialOwnerDob,
       beneficialOwnerNid: beneficialOwnerNid ?? this.beneficialOwnerNid,
+      riskScore: riskScore ?? this.riskScore,
+      riskRating: riskRating ?? this.riskRating,
+      riskGradingComments: riskGradingComments ?? this.riskGradingComments,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'accountType': accountType,
+    'currency': currency,
+    'operationMode': operationMode,
+    'initialDeposit': initialDeposit,
+    'applicantNameBangla': applicantNameBangla,
+    'applicantNameEnglish': applicantNameEnglish,
+    'fatherName': fatherName,
+    'motherName': motherName,
+    'spouseName': spouseName,
+    'dob': dob,
+    'gender': gender,
+    'nationality': nationality,
+    'occupation': occupation,
+    'monthlyIncome': monthlyIncome,
+    'tin': tin,
+    'nidNumber': nidNumber,
+    'passportNumber': passportNumber,
+    'birthRegNumber': birthRegNumber,
+    'presentAddress': presentAddress.toJson(),
+    'permanentAddress': permanentAddress.toJson(),
+    'mobileNumber': mobileNumber,
+    'email': email,
+    'introducerName': introducerName,
+    'introducerAccountNo': introducerAccountNo,
+    'introducerBranch': introducerBranch,
+    'nominees': nominees.map((x) => x.toJson()).toList(),
+    'transactionProfile': transactionProfile.toJson(),
+    'applicantPhotoPath': applicantPhotoPath,
+    'applicantSignaturePath': applicantSignaturePath,
+    'nidFrontPath': nidFrontPath,
+    'nidBackPath': nidBackPath,
+    'beneficialOwnerName': beneficialOwnerName,
+    'beneficialOwnerRelation': beneficialOwnerRelation,
+    'beneficialOwnerDob': beneficialOwnerDob,
+    'beneficialOwnerNid': beneficialOwnerNid,
+    'riskScore': riskScore,
+    'riskRating': riskRating,
+    'riskGradingComments': riskGradingComments,
+  };
+
+  factory ApplicationForm.fromJson(Map<String, dynamic> json) => ApplicationForm(
+    accountType: json['accountType'] ?? 'Savings',
+    currency: json['currency'] ?? 'BDT',
+    operationMode: json['operationMode'] ?? 'Singly',
+    initialDeposit: json['initialDeposit'] ?? '',
+    applicantNameBangla: json['applicantNameBangla'] ?? '',
+    applicantNameEnglish: json['applicantNameEnglish'] ?? '',
+    fatherName: json['fatherName'] ?? '',
+    motherName: json['motherName'] ?? '',
+    spouseName: json['spouseName'] ?? '',
+    dob: json['dob'] ?? '',
+    gender: json['gender'] ?? '',
+    nationality: json['nationality'] ?? '',
+    occupation: json['occupation'] ?? '',
+    monthlyIncome: json['monthlyIncome'] ?? '',
+    tin: json['tin'] ?? '',
+    nidNumber: json['nidNumber'] ?? '',
+    passportNumber: json['passportNumber'] ?? '',
+    birthRegNumber: json['birthRegNumber'] ?? '',
+    presentAddress: json['presentAddress'] != null ? Address.fromJson(json['presentAddress']) : Address.empty(),
+    permanentAddress: json['permanentAddress'] != null ? Address.fromJson(json['permanentAddress']) : Address.empty(),
+    mobileNumber: json['mobileNumber'] ?? '',
+    email: json['email'] ?? '',
+    introducerName: json['introducerName'] ?? '',
+    introducerAccountNo: json['introducerAccountNo'] ?? '',
+    introducerBranch: json['introducerBranch'] ?? '',
+    nominees: json['nominees'] != null
+        ? List<Nominee>.from(json['nominees'].map((x) => Nominee.fromJson(x)))
+        : [Nominee.empty()],
+    transactionProfile: json['transactionProfile'] != null
+        ? TransactionProfile.fromJson(json['transactionProfile'])
+        : TransactionProfile.empty(),
+    applicantPhotoPath: json['applicantPhotoPath'],
+    applicantSignaturePath: json['applicantSignaturePath'],
+    nidFrontPath: json['nidFrontPath'],
+    nidBackPath: json['nidBackPath'],
+    beneficialOwnerName: json['beneficialOwnerName'] ?? '',
+    beneficialOwnerRelation: json['beneficialOwnerRelation'] ?? '',
+    beneficialOwnerDob: json['beneficialOwnerDob'] ?? '',
+    beneficialOwnerNid: json['beneficialOwnerNid'] ?? '',
+    riskScore: json['riskScore'] ?? 0,
+    riskRating: json['riskRating'] ?? 'Low',
+    riskGradingComments: json['riskGradingComments'] ?? '',
+  );
 }
 
 class Address {
   String flatNo;
   String roadNo;
-  String village; // or Area
+  String village;
   String postOffice;
   String postCode;
-  String policeStation; // Thana
+  String policeStation;
   String district;
 
   Address({
@@ -201,7 +297,47 @@ class Address {
 
   factory Address.empty() => Address();
 
+  Address copyWith({
+    String? flatNo,
+    String? roadNo,
+    String? village,
+    String? postOffice,
+    String? postCode,
+    String? policeStation,
+    String? district,
+  }) {
+    return Address(
+      flatNo: flatNo ?? this.flatNo,
+      roadNo: roadNo ?? this.roadNo,
+      village: village ?? this.village,
+      postOffice: postOffice ?? this.postOffice,
+      postCode: postCode ?? this.postCode,
+      policeStation: policeStation ?? this.policeStation,
+      district: district ?? this.district,
+    );
+  }
+
   String get fullAddress => [flatNo, roadNo, village, postOffice, policeStation, district].where((s) => s.isNotEmpty).join(', ');
+
+  Map<String, dynamic> toJson() => {
+    'flatNo': flatNo,
+    'roadNo': roadNo,
+    'village': village,
+    'postOffice': postOffice,
+    'postCode': postCode,
+    'policeStation': policeStation,
+    'district': district,
+  };
+
+  factory Address.fromJson(Map<String, dynamic> json) => Address(
+    flatNo: json['flatNo'] ?? '',
+    roadNo: json['roadNo'] ?? '',
+    village: json['village'] ?? '',
+    postOffice: json['postOffice'] ?? '',
+    postCode: json['postCode'] ?? '',
+    policeStation: json['policeStation'] ?? '',
+    district: json['district'] ?? '',
+  );
 }
 
 class Nominee {
@@ -224,13 +360,31 @@ class Nominee {
   });
 
   factory Nominee.empty() => Nominee();
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'relation': relation,
+    'dob': dob,
+    'percentage': percentage,
+    'nidNumber': nidNumber,
+    'photoPath': photoPath,
+    'signaturePath': signaturePath,
+  };
+
+  factory Nominee.fromJson(Map<String, dynamic> json) => Nominee(
+    name: json['name'] ?? '',
+    relation: json['relation'] ?? '',
+    dob: json['dob'] ?? '',
+    percentage: json['percentage'] ?? '100',
+    nidNumber: json['nidNumber'] ?? '',
+    photoPath: json['photoPath'] ?? '',
+    signaturePath: json['signaturePath'] ?? '',
+  );
 }
 
 class TransactionProfile {
   String sourceOfFund;
   String monthlyIncome;
-
-  // Deposits (Number of Trans, Total Amount)
   String cashDepositNum;
   String cashDepositAmt;
   String transferDepositNum;
@@ -239,8 +393,6 @@ class TransactionProfile {
   String foreignRemittanceAmt;
   String exportProceedsNum;
   String exportProceedsAmt;
-
-  // Withdrawals
   String cashWithdrawalNum;
   String cashWithdrawalAmt;
   String transferWithdrawalNum;
@@ -264,4 +416,72 @@ class TransactionProfile {
   });
 
   factory TransactionProfile.empty() => TransactionProfile();
+
+  TransactionProfile copyWith({
+    String? sourceOfFund,
+    String? monthlyIncome,
+    String? cashDepositNum,
+    String? cashDepositAmt,
+    String? transferDepositNum,
+    String? transferDepositAmt,
+    String? foreignRemittanceNum,
+    String? foreignRemittanceAmt,
+    String? exportProceedsNum,
+    String? exportProceedsAmt,
+    String? cashWithdrawalNum,
+    String? cashWithdrawalAmt,
+    String? transferWithdrawalNum,
+    String? transferWithdrawalAmt,
+  }) {
+    return TransactionProfile(
+      sourceOfFund: sourceOfFund ?? this.sourceOfFund,
+      monthlyIncome: monthlyIncome ?? this.monthlyIncome,
+      cashDepositNum: cashDepositNum ?? this.cashDepositNum,
+      cashDepositAmt: cashDepositAmt ?? this.cashDepositAmt,
+      transferDepositNum: transferDepositNum ?? this.transferDepositNum,
+      transferDepositAmt: transferDepositAmt ?? this.transferDepositAmt,
+      foreignRemittanceNum: foreignRemittanceNum ?? this.foreignRemittanceNum,
+      foreignRemittanceAmt: foreignRemittanceAmt ?? this.foreignRemittanceAmt,
+      exportProceedsNum: exportProceedsNum ?? this.exportProceedsNum,
+      exportProceedsAmt: exportProceedsAmt ?? this.exportProceedsAmt,
+      cashWithdrawalNum: cashWithdrawalNum ?? this.cashWithdrawalNum,
+      cashWithdrawalAmt: cashWithdrawalAmt ?? this.cashWithdrawalAmt,
+      transferWithdrawalNum: transferWithdrawalNum ?? this.transferWithdrawalNum,
+      transferWithdrawalAmt: transferWithdrawalAmt ?? this.transferWithdrawalAmt,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'sourceOfFund': sourceOfFund,
+    'monthlyIncome': monthlyIncome,
+    'cashDepositNum': cashDepositNum,
+    'cashDepositAmt': cashDepositAmt,
+    'transferDepositNum': transferDepositNum,
+    'transferDepositAmt': transferDepositAmt,
+    'foreignRemittanceNum': foreignRemittanceNum,
+    'foreignRemittanceAmt': foreignRemittanceAmt,
+    'exportProceedsNum': exportProceedsNum,
+    'exportProceedsAmt': exportProceedsAmt,
+    'cashWithdrawalNum': cashWithdrawalNum,
+    'cashWithdrawalAmt': cashWithdrawalAmt,
+    'transferWithdrawalNum': transferWithdrawalNum,
+    'transferWithdrawalAmt': transferWithdrawalAmt,
+  };
+
+  factory TransactionProfile.fromJson(Map<String, dynamic> json) => TransactionProfile(
+    sourceOfFund: json['sourceOfFund'] ?? '',
+    monthlyIncome: json['monthlyIncome'] ?? '',
+    cashDepositNum: json['cashDepositNum'] ?? '',
+    cashDepositAmt: json['cashDepositAmt'] ?? '',
+    transferDepositNum: json['transferDepositNum'] ?? '',
+    transferDepositAmt: json['transferDepositAmt'] ?? '',
+    foreignRemittanceNum: json['foreignRemittanceNum'] ?? '',
+    foreignRemittanceAmt: json['foreignRemittanceAmt'] ?? '',
+    exportProceedsNum: json['exportProceedsNum'] ?? '',
+    exportProceedsAmt: json['exportProceedsAmt'] ?? '',
+    cashWithdrawalNum: json['cashWithdrawalNum'] ?? '',
+    cashWithdrawalAmt: json['cashWithdrawalAmt'] ?? '',
+    transferWithdrawalNum: json['transferWithdrawalNum'] ?? '',
+    transferWithdrawalAmt: json['transferWithdrawalAmt'] ?? '',
+  );
 }

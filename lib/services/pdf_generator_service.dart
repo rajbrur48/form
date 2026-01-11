@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../models/application_form.dart';
+import '../utils/bangla_amount_converter.dart';
 
 class PdfGeneratorService {
   Future<Uint8List> generatePdf(ApplicationForm form) async {
@@ -22,13 +23,11 @@ class PdfGeneratorService {
 
     // Load Background Images
     final bgPage1 = await loadImage('1.png');
-    // We would load all 11 images here in a real scenario
-    // final bgPage2 = await loadImage('2.png'); ...
-
     final bgPage2 = await loadImage('2.png');
     final bgPage3 = await loadImage('3.png');
     final bgPage4 = await loadImage('4.png');
     final bgPage5 = await loadImage('5.png');
+    final bgPage7 = await loadImage('7.png'); // Page 7 for Risk Score
     final bgPage8 = await loadImage('8.png');
 
     // Helper for Text Overlay
@@ -61,9 +60,6 @@ class PdfGeneratorService {
               ),
 
               // 2. Applicant Photo (Top Right)
-              // Coordinates need to be calibrated to the image.
-              // Assuming A4 (595 x 842 points).
-              // 1.png analysis: Photo box is roughly at x=450, y=100
               if (form.applicantPhotoPath != null)
                 pw.Positioned(
                   left: 480,
@@ -94,8 +90,16 @@ class PdfGeneratorService {
               // Mother Name
               positionedText(form.motherName, 180, 355, size: 12),
 
-              // Example of filling checkboxes (if we had them mapped)
-              // positionedText("X", 100, 100, isBold: true),
+              // Initial Deposit (Assuming Item 5 or similar on Page 1)
+              // Using arbitrary coordinates based on typical "Initial Deposit" location if visible,
+              // or bottom of page if not specified. User confirmed it is on Page 1 (3.png in their context, but 1.png here).
+              // Let's place it near bottom or check user provided 3.png context.
+              // In 3.png, Item 5 is Initial Deposit.
+              // Coordinate Estimation: Below Personal Info.
+              if (form.initialDeposit.isNotEmpty) ...[
+                 positionedText(form.initialDeposit, 180, 600, size: 12), // Figure
+                 positionedText(BanglaAmountConverter.convert(double.tryParse(form.initialDeposit) ?? 0), 300, 600, size: 12), // Words
+              ]
             ],
           );
         },
@@ -112,17 +116,29 @@ class PdfGeneratorService {
             children: [
               pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage2, fit: pw.BoxFit.fill)),
 
-              // Present Address
-              positionedText(form.presentAddress.flatNo + ", " + form.presentAddress.roadNo, 180, 100, size: 10),
-              positionedText(form.presentAddress.village, 180, 120, size: 10),
-              positionedText(form.presentAddress.postOffice + ", " + form.presentAddress.postCode, 180, 140, size: 10),
-              positionedText(form.presentAddress.policeStation + ", " + form.presentAddress.district, 180, 160, size: 10),
+              // Granular Address Fields for Present Address
+              // Road / Village
+              positionedText(form.presentAddress.roadNo + ", " + form.presentAddress.village, 180, 100, size: 10),
+              // Post Office
+              positionedText(form.presentAddress.postOffice, 180, 120, size: 10),
+              // Post Code (often next to Post Office)
+              positionedText(form.presentAddress.postCode, 350, 120, size: 10),
+              // Thana / Police Station
+              positionedText(form.presentAddress.policeStation, 180, 140, size: 10),
+              // District
+              positionedText(form.presentAddress.district, 350, 140, size: 10),
 
-              // Permanent Address (Approximated Y coordinates below Present)
-              positionedText(form.permanentAddress.flatNo + ", " + form.permanentAddress.roadNo, 180, 250, size: 10),
-              positionedText(form.permanentAddress.village, 180, 270, size: 10),
-              positionedText(form.permanentAddress.postOffice + ", " + form.permanentAddress.postCode, 180, 290, size: 10),
-              positionedText(form.permanentAddress.policeStation + ", " + form.permanentAddress.district, 180, 310, size: 10),
+              // Granular Address Fields for Permanent Address
+              // Road / Village
+              positionedText(form.permanentAddress.roadNo + ", " + form.permanentAddress.village, 180, 250, size: 10),
+              // Post Office
+              positionedText(form.permanentAddress.postOffice, 180, 270, size: 10),
+              // Post Code
+              positionedText(form.permanentAddress.postCode, 350, 270, size: 10),
+              // Thana
+              positionedText(form.permanentAddress.policeStation, 180, 290, size: 10),
+              // District
+              positionedText(form.permanentAddress.district, 350, 290, size: 10),
             ],
           );
         },
@@ -213,14 +229,38 @@ class PdfGeneratorService {
       ),
     );
 
-    // --- Pages 6 & 7: Office Use ---
-    for (int i = 6; i <= 7; i++) {
-        final bg = await loadImage('$i.png');
-        pdf.addPage(pw.Page(
-            pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
-            build: (c) => pw.FullPage(ignoreMargins: true, child: pw.Image(bg, fit: pw.BoxFit.fill)),
-        ));
-    }
+    // --- Page 6 (Office Use) ---
+    // Just background for now, or copy previous loop logic if no content needed.
+    final bgPage6 = await loadImage('6.png');
+    pdf.addPage(pw.Page(
+        pageFormat: PdfPageFormat.a4, margin: pw.EdgeInsets.zero,
+        build: (c) => pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage6, fit: pw.BoxFit.fill)),
+    ));
+
+    // --- PAGE 7: Risk Analysis ---
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: pw.EdgeInsets.zero,
+        build: (pw.Context context) {
+          return pw.Stack(
+            children: [
+              pw.FullPage(ignoreMargins: true, child: pw.Image(bgPage7, fit: pw.BoxFit.fill)),
+
+              // Risk Score Total (Item 14)
+              // Coordinates estimated from 7.png (bottom section)
+              positionedText("${form.riskScore}", 300, 600, size: 14, isBold: true),
+
+              // Risk Rating (High/Low)
+              positionedText(form.riskRating, 300, 630, size: 14, isBold: true),
+
+              // Comments
+              positionedText(form.riskGradingComments, 100, 660, size: 10),
+            ],
+          );
+        },
+      ),
+    );
 
     // --- PAGE 8: Beneficial Owner ---
     pdf.addPage(
@@ -242,7 +282,7 @@ class PdfGeneratorService {
       ),
     );
 
-    // --- Pages 9-11: Risk & Terms ---
+    // --- Pages 9-11: Terms ---
     for (int i = 9; i <= 11; i++) {
         final bg = await loadImage('$i.png');
         pdf.addPage(pw.Page(
